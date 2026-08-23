@@ -42,6 +42,17 @@ The platform should eventually support these roles:
 - **Other business owner**: uses the fallback category for now.
 - **Admin**: manages moderation, verification, and platform growth later.
 
+### Other-business direction
+
+The `Other` category should remain simple for now, but later it can grow into a separate SaaS-style offering for non-driving businesses. That future path can include:
+
+- area-based tags
+- response-time indicators
+- featured slots
+- cancellation policy display
+
+Those features should apply to the broader business side later, not the instructor core.
+
 ## Core User Journeys
 
 ### 1. A learner finds an instructor
@@ -255,6 +266,10 @@ These are not required for the first version, but they can help reduce uncertain
 - Add instructor availability indicators
 - Add richer profile stats
 - Add local comparison and shortlist flows
+- Add cancellation policy display
+- Add response-time indicator
+- Add area-based tags for non-instructor businesses
+- Prepare the `Other` category for a future SaaS path
 
 ### Phase 3
 
@@ -278,6 +293,8 @@ These are future ideas worth noting, but they should stay out of the early roadm
 - Instructor response-time badge
 - Multilingual support for English and Irish
 - Public instructor availability feed
+- Business SaaS dashboard for the `Other` category
+- Business feature marketplace for later monetization
 
 ## Ideas Rejected for Now
 
@@ -307,6 +324,13 @@ These are not committed for now, but they could make the platform stronger if th
 - Test-centre landing pages for SEO after the core product is stable
 - Referral program for instructors and learners
 - Loyalty or repeat-booking rewards
+- Verification document upload for instructors
+- Instructor-specific FAQ section
+- Instructor cancellation policy settings
+- Instructor availability badge system
+- Public business area tags
+- Public business response-time label
+- Featured slots for later business monetization
 
 ## Technical Notes
 
