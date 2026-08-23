@@ -180,7 +180,7 @@ The first version should include:
 
 ### Default sorting
 
-Results should **not** default to lessons-done, because that number is self-reported and unverified at launch (abuse and DSA ranking-transparency risk). Default sort at launch: **profile completeness + review count** (trust-first, non-gameable). Lessons-done sorting becomes available once verification/corroboration exists (Phase 2). Under Regulation (EU) 2022/2065 (DSA) the platform must disclose the main ranking parameters used.
+Results should **not** default to lessons-done, because that number is self-reported and unverified at launch (abuse risk, and ranking on unverified data undermines the trust product). Default sort at launch: **profile completeness + review count** (trust-first, non-gameable), with verified profiles ranked above unverified. Lessons-done sorting becomes available once verification/corroboration exists (Phase 2). DSA note: ranking-parameter disclosure (Art. 27) is an online-platform obligation that micro/small enterprises are exempt from under Art. 19 — not a launch blocker — but documenting the sort in the ToS is cheap and becomes mandatory if the platform outgrows micro/small status.
 
 ### Search behavior
 
@@ -263,6 +263,7 @@ These are not required for the first version, but they can help reduce uncertain
 The lessons-done number is self-verified by the instructor, which makes it gameable (a new account can claim 12,000 lessons and rank first). To protect trust and legal standing:
 
 - Cap initial self-reported values at a modest maximum.
+- Unverified profiles keep the lowest self-reported cap; the cap lifts once ADI status is verified.
 - Always label displayed values as "self-reported" until corroborated.
 - Require corroboration (completed bookings and/or reviews) before high values display without the label.
 - Do not use lessons-done as the default sort until verification exists.
@@ -285,13 +286,21 @@ Every business on the platform pays a **fixed subscription fee** — not commiss
 4. **Reviews and booking history are retained** — they are partly learners' data and survive instructor suspension/deletion (see Data & Deletion).
 5. **Resubscribing restores everything** (profile, photos, listing position resets naturally).
 
+### Subscription mechanics
+
+- Every new business account starts with a **3-month free trial**.
+- **Card verification via Stripe is required to start the trial** — no card, no trial. This is the anti-throwaway-signup gate, not a paywall: the trial itself is free.
+- At trial end, billing **converts automatically to €5/month** (flat fee).
+- This slots into the existing status model with **no schema change**: **trial** covers the 3 free months → **active** once billing starts → **past_due / grace** if a card is declined → **cancelled**. The lapse handling above applies from the moment billing starts.
+- **Implementation status:** Phase 1 ships the schema only — status field plus trial/billing date fields (`trialStartedAt`, `trialEndsAt`, `currentPeriodEnd`, `graceEndsAt`). Actual Stripe wiring (card verification, subscription creation, webhooks, dunning) is a defined **Phase 2 placeholder workstream**, not built at launch.
+
 ## Trust, Safety & Legal
 
 This is a stranger-meets-stranger-in-a-car product involving minors (Irish learner permits start at 16). These items are obligations in Ireland, not optional features:
 
-- **ADI verification:** teaching driving for reward without being on the RSA ADI register is a criminal offence (fine up to €2,000 or 6 months). The ADI number is a **required onboarding field**, and a verified badge (initially manual checks against the RSA public register) belongs in Phase 1–2, not late-stage ideas.
+- **ADI verification:** teaching driving for reward without being on the RSA ADI register is a criminal offence (fine up to €2,000 or 6 months). The ADI number is a **required onboarding field**, but account creation is **immediate — no human gate at signup** (cold-start: with zero network effect, instructors won't wait for manual review). New profiles are publicly listed but clearly marked **unverified**, ranked below verified profiles, and subject to the lowest self-reported lessons cap. Admins verify against the RSA public register (name, ADI number, counties, categories) in a manual queue at launch; verification tooling comes later. The verified badge moves from "very late idea" to Phase 1–2.
 - **GDPR (DPC is the regulator):** privacy policy and terms of service; lawful basis and retention schedule for reviews (two people's personal data per review), photos (which may show learners, possibly minors), published phone numbers, and booking history. Choose EU-region hosting (e.g. Atlas Dublin/Frankfurt) and DPAs for Mongo, image hosting, and app hosting.
-- **DSA (Regulation EU 2022/2065):** a report/abuse (notice-and-action) flow is required at launch for a hosting platform — not "worth considering later". Ranking parameters must be disclosed (Art. 27).
+- **DSA (Regulation EU 2022/2065) — size matters:** Pro.me is a hosting service and an online platform (it stores and publicly disseminates profiles, photos, and reviews). As a micro or small enterprise (<50 staff and ≤€10M turnover/balance sheet per Recommendation 2003/361/EC), Art. 19 exempts it from most Section 3 "online platform" obligations — Arts. 20–28, including Art. 27 ranking/recommender transparency — and Art. 29 likewise exempts the trader-traceability rules (Arts. 30–32). **Still required at launch regardless of size:** Art. 14 (terms of service), Art. 16 notice-and-action (so the report/abuse flow IS a launch requirement, not "worth considering later"), Art. 17 (statement of reasons when acting on content), Art. 18 (reporting suspected criminal offences), Arts. 11–12 (contact points), and Art. 24(3) — an annual content-moderation transparency report, the one Section 3 duty that survives the Art. 19 exclusion. The exemption lasts only while the company stays micro/small (12-month grace after losing that status); Art. 27 ranking disclosure becomes mandatory at that point. Cited from: Regulation (EU) 2022/2065, Arts. 16, 19, 24, 27, 29 (Official Journal text).
 - **Deletion handling:** there must be account-deletion endpoints. Learner deletion anonymises their reviews ("Deleted user") or removes them per request; instructor deletion/suspension hides the profile but retains learners' own booking history, which belongs to the learner.
 - **Minors:** ToS language covering 16–17 year olds; consider an explicit parent-booking flow later.
 - **Insurance/liability disclaimer:** instructors confirm at signup that they hold insurance covering paid instruction; terms state the platform only introduces and the instructor is solely responsible for the lesson.
@@ -304,17 +313,18 @@ This is a stranger-meets-stranger-in-a-car product involving minors (Irish learn
 - Build the photo upload pipeline (multer + Cloudinary — both are already in backend dependencies but currently unused).
 - Limit provider onboarding to Driving Instructor or Other; remove legacy verticals from the code (see Known Code Debt).
 - Instructor-specific profile fields: counties, test centres, licence categories, transmission, ADI number.
-- ADI number required at signup; manual verification against the RSA register; verified badge.
+- ADI number required at signup; account creation immediate; profile listed as **unverified** (badged, ranked below verified, lowest lessons cap) until an admin verifies it against the RSA register via a manual verification queue.
 - Filtered instructor search page: county, test centre, category, transmission, rating, price, availability status (accepting new students: yes/no toggle only — the real calendar is Phase 2).
 - Profile: picture, rating, self-reported lessons count (labelled), bio, gallery, ADI badge.
 - Save/favorite instructor (auth-gated; requires logged-in learner account).
 - Profile completion progress.
 - Terms of service, privacy policy, report/abuse flow, account deletion.
-- Subscription scaffolding: status field, grace/suspend/archive behaviour, lapse handling.
+- Subscription scaffolding (**schema only, no Stripe**): status field (trial/active/grace/past_due/cancelled) + trial date fields (`trialStartedAt`, `trialEndsAt`), grace/suspend/archive behaviour, lapse handling.
 - Keep the Other category available as a fallback.
 
 ### Phase 2 — Depth & Corroboration
 
+- Stripe subscription billing (**placeholder workstream — defined scope, not built in Phase 1**): card verification at trial start (no card = no trial), 3-month free trial auto-converting to €5/month, webhooks for trial-end/payment events, dunning on declined cards (past_due → grace → cancelled per the lapse rules).
 - Availability calendar (replaces the boolean availability toggle) and availability filter wired to it.
 - Reviews linked to completed bookings (block unauthenticated/competitor reviews).
 - Student reviews with photos.
@@ -346,7 +356,7 @@ These are future ideas worth noting, but they should stay out of the early roadm
 - Multilingual support for English and Irish
 - Public instructor availability feed
 - Business SaaS dashboard for the `Other` category
-- Payments / booking deposits (requires an explicit payments workstream)
+- Lesson payments / booking deposits (distinct from subscription billing — requires its own explicit payments workstream)
 - "RSA quality approved"-style second verification tier
 
 ## Ideas Rejected for Now
@@ -404,7 +414,8 @@ The current code still carries the old broad-marketplace assumptions and must be
 - Adding categories to an ADI permit: rsa.ie/.../add-categories-to-your-adi-permit
 - ADI regulations & penalties: rsa.ie/.../regulations (S.I. No. 146/2009 et al.)
 - Driving test centres by county (41 locations): rsa.ie/services/learner-drivers/the-driving-test/driving-test-centres
+- DSA obligations cited above: Regulation (EU) 2022/2065, Arts. 16, 19, 24, 27, 29 (Official Journal text; e.g. eu-digital-services-act.com mirror)
 
 ## Summary
 
-Pro.me should become an Ireland-first platform for finding and booking driving instructors, with a clean searchable directory, step-based instructor onboarding, and profile pages that feel modern and visual. Trust is the differentiator: verified ADI status, booking-linked reviews, and honest self-reported stats — built on a flat-subscription business model with clear lapse handling and Irish/EU legal compliance from day one.
+Pro.me should become an Ireland-first platform for finding and booking driving instructors, with a clean searchable directory, step-based instructor onboarding, and profile pages that feel modern and visual. Trust is the differentiator: verified ADI status, booking-linked reviews, and honest self-reported stats — built on a flat-subscription business model (3-month trial → €5/month) with clear lapse handling and Irish/EU legal compliance from day one.
