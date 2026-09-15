@@ -5,9 +5,11 @@ import { useAuth } from "../context/AuthContext";
 import { getCategoryImage } from "../utils/categoryImages";
 import { StarDisplay, StarPicker } from "../components/StarRating";
 import ReviewCard from "../components/ReviewCard";
+import ReportDialog from "../components/ReportDialog";
 
 function ProviderProfile() {
   const { providerId } = useParams();
+  const [reportOpen, setReportOpen] = useState(false);
   const { user } = useAuth();
 
   const [provider, setProvider] = useState(null);
@@ -264,6 +266,31 @@ function ProviderProfile() {
           </p>
         )}
       </div>
+
+      {/* DSA Article 16: reporting must be available to everyone, signed in
+          or not, so this sits outside every auth check on the page. */}
+      <div className="report-trigger-row">
+        <button
+          type="button"
+          className="report-trigger"
+          onClick={() => setReportOpen(true)}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 9v4M12 17h.01M10.3 3.9L2.4 17.6A2 2 0 004.1 20.6h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Report this profile
+        </button>
+      </div>
+
+      {reportOpen && (
+        <ReportDialog
+          targetType="profile"
+          targetId={providerId}
+          targetLabel={provider?.name}
+          onClose={() => setReportOpen(false)}
+        />
+      )}
     </section>
   );
 }
