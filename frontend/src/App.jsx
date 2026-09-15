@@ -8,10 +8,12 @@ import CustomerDashboardPage from "./pages/CustomerDashboardPage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import ProviderDashboardPage from "./pages/ProviderDashboardPage";
+import PrivacyPage from "./pages/PrivacyPage";
 import ProviderListingsPage from "./pages/ProviderListingsPage";
 import ProviderProfile from "./pages/ProviderProfile";
 import RegisterPage from "./pages/RegisterPage";
 import ServicesDashboardPage from "./pages/ServicesDashboardPage";
+import TermsPage from "./pages/TermsPage";
 
 /*
  * MainLayout — shared shell for all pages that show the header and footer.
@@ -44,6 +46,8 @@ function App() {
         <Route path="/services" element={<MainLayout><ServicesDashboardPage /></MainLayout>} />
         <Route path="/booking" element={<MainLayout><BookingPage /></MainLayout>} />
         <Route path="/contact" element={<MainLayout><ContactPage /></MainLayout>} />
+        <Route path="/terms" element={<MainLayout><TermsPage /></MainLayout>} />
+        <Route path="/privacy" element={<MainLayout><PrivacyPage /></MainLayout>} />
         <Route
           path="/dashboard/customer"
           element={<MainLayout><CustomerDashboardPage /></MainLayout>}

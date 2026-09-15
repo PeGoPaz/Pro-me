@@ -3901,3 +3901,114 @@ details[open] .contact-faq-q::after {
     padding: 1.5rem 1.25rem;
   }
 }
+
+/* ── Legal pages (terms, privacy) ──────────────────────────────────────────
+   Long-form reading, so a narrow measure and generous line height rather than
+   the wide card layouts used elsewhere. */
+.legal-page {
+  width: 100%;
+  max-width: 47rem;
+  /* main is a grid container, and a grid item defaults to min-width:auto, which
+     stops it shrinking below its content and let the whole page scroll
+     sideways on a phone. min-width:0 is what allows it to shrink. */
+  min-width: 0;
+  margin: 0 auto;
+  padding: 2.5rem 1rem 4rem;
+  line-height: 1.7;
+  color: #333;
+}
+
+.legal-title {
+  margin: 0 0 0.35rem;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.legal-updated {
+  margin: 0 0 1.75rem;
+  font-size: 0.9rem;
+  color: #777;
+}
+
+/* Draft banner — deliberately loud, so nobody ships these unreviewed. */
+.legal-callout {
+  margin-bottom: 2.25rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid #f0d8a8;
+  border-left: 4px solid #d99a2b;
+  border-radius: 8px;
+  background: #fdf6e8;
+  font-size: 0.92rem;
+  color: #6b4d15;
+}
+
+.legal-section {
+  margin-bottom: 2rem;
+}
+
+.legal-section h2 {
+  margin: 0 0 0.6rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.legal-section p {
+  margin: 0 0 0.85rem;
+}
+
+.legal-list {
+  margin: 0 0 0.85rem;
+  padding-left: 1.25rem;
+}
+
+.legal-list li {
+  margin-bottom: 0.45rem;
+}
+
+.legal-link {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.legal-table {
+  width: 100%;
+  margin-bottom: 0.85rem;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.legal-table th,
+.legal-table td {
+  padding: 0.6rem 0.7rem;
+  border: 1px solid #e6e9f2;
+  text-align: left;
+  vertical-align: top;
+}
+
+.legal-table th {
+  background: #f6f8fd;
+  font-weight: 600;
+}
+
+.legal-footer-note {
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #e6e9f2;
+  font-size: 0.92rem;
+  color: #666;
+}
+
+/* The data table is the one thing that cannot shrink gracefully, so let it
+   scroll sideways on a phone instead of squashing the columns. */
+@media (max-width: 34rem) {
+  .legal-page {
+    padding: 2rem 1rem 3rem;
+  }
+
+  .legal-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
