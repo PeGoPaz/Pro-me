@@ -24,6 +24,17 @@ const userSchema = new mongoose.Schema({
         required: true,
         enum: ["user", "enterprise"]
     },
+    /* Which kind of business this provider runs. Onboarding is deliberately
+       limited to these two: driving instructors are the launch vertical and
+       "other" is the generic fallback. Only meaningful for role "enterprise". */
+    providerType: {
+        type: String,
+        enum: ["driving_instructor", "other"],
+        required: function () {
+            return this.role === "enterprise";
+        },
+        default: undefined
+    },
     avatarUrl: {
         type: String,
         trim: true,
