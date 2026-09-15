@@ -4163,3 +4163,432 @@ details[open] .contact-faq-q::after {
   gap: 0.6rem;
   margin-top: 0.25rem;
 }
+
+/* ── Instructor search page ───────────────────────────────────────────────
+   Mobile-first: filters stack above the results on a phone and become a
+   sticky sidebar once there is room, since most browsing happens on phones. */
+.inst-search {
+  width: 100%;
+  min-width: 0;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 2rem 1rem 3.5rem;
+}
+
+.inst-search-head {
+  margin-bottom: 1.75rem;
+}
+
+.inst-search-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.9rem;
+  font-weight: 700;
+}
+
+.inst-search-sub {
+  margin: 0;
+  color: #666;
+  line-height: 1.6;
+}
+
+.inst-search-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 60rem) {
+  .inst-search-body {
+    grid-template-columns: 17rem 1fr;
+    align-items: start;
+  }
+
+  .inst-filters {
+    position: sticky;
+    top: 1.5rem;
+  }
+}
+
+/* ── filters ─────────────────────────────────────────────────────────── */
+.inst-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.1rem;
+  border: 1px solid #e6e9f2;
+  border-radius: 12px;
+  background: #fbfcff;
+}
+
+.inst-filters-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.inst-filters-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.inst-filters-clear {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--primary);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.inst-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.inst-filter-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #444;
+}
+
+.inst-filter select,
+.inst-filter input[type="number"] {
+  width: 100%;
+  padding: 0.55rem 0.6rem;
+  border: 1.5px solid #dfe4f2;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+  color: #222;
+}
+
+.inst-filter select:focus,
+.inst-filter input:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+.inst-filter-check {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  color: #444;
+}
+
+.inst-filter-check input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--primary);
+}
+
+/* ── results ─────────────────────────────────────────────────────────── */
+.inst-results {
+  min-width: 0;
+}
+
+.inst-results-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.inst-results-count {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #444;
+}
+
+.inst-sort {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.inst-sort-label {
+  font-size: 0.85rem;
+  color: #777;
+}
+
+.inst-sort select {
+  padding: 0.4rem 0.5rem;
+  border: 1.5px solid #dfe4f2;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.87rem;
+}
+
+/* Ranking disclosure — kept visible rather than buried in the terms. */
+.inst-sort-note {
+  margin: 0 0 1.1rem;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #8a8f9e;
+}
+
+.inst-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 44rem) {
+  .inst-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.inst-empty {
+  margin: 0;
+  padding: 2rem 0;
+  color: #888;
+}
+
+.inst-empty-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+/* ── instructor card ─────────────────────────────────────────────────── */
+.inst-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+  padding: 1.1rem;
+  border: 1px solid #e6e9f2;
+  border-radius: 12px;
+  background: #fff;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.inst-card:hover {
+  border-color: #cfd8f0;
+  box-shadow: 0 6px 20px rgba(30, 75, 221, 0.08);
+}
+
+.inst-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.inst-card-avatar {
+  flex: 0 0 3.25rem;
+  width: 3.25rem;
+  height: 3.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #eef2fd;
+  overflow: hidden;
+}
+
+.inst-card-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.inst-card-avatar-initials {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.inst-card-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.inst-card-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.15rem;
+  font-size: 1.02rem;
+  font-weight: 700;
+}
+
+/* Verification is the product's whole differentiator, so it reads as a
+   badge rather than a footnote. */
+.inst-badge-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  padding: 0.12rem 0.4rem;
+  border-radius: 5px;
+  background: #e7f5ee;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: #197a52;
+}
+
+.inst-card-headline {
+  margin: 0 0 0.35rem;
+  font-size: 0.87rem;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inst-card-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.83rem;
+}
+
+.inst-card-rating {
+  font-weight: 600;
+  color: #333;
+}
+
+.inst-card-rating-new {
+  font-weight: 400;
+  color: #999;
+}
+
+.inst-card-reviews {
+  font-weight: 400;
+  color: #888;
+}
+
+.inst-card-lessons {
+  color: #666;
+}
+
+/* Never let the count read as a verified figure. */
+.inst-card-selfreported {
+  color: #a0a4b2;
+  font-size: 0.78rem;
+}
+
+.inst-card-save {
+  flex: 0 0 auto;
+  padding: 0.3rem;
+  border: none;
+  background: none;
+  color: #c2c7d4;
+  cursor: pointer;
+  transition: color 0.18s;
+}
+
+.inst-card-save:hover {
+  color: var(--primary);
+}
+
+.inst-card-save-on {
+  color: var(--primary);
+}
+
+.inst-card-coverage,
+.inst-card-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.inst-chip {
+  padding: 0.16rem 0.45rem;
+  border-radius: 5px;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.inst-chip-county {
+  background: #eef2fd;
+  color: #24439c;
+}
+
+.inst-chip-centre {
+  background: #f3f4f8;
+  color: #5d6373;
+}
+
+.inst-chip-more {
+  background: transparent;
+  color: #9aa0b0;
+  font-weight: 400;
+}
+
+.inst-chip-cat {
+  background: #1e4bdd;
+  color: #fff;
+}
+
+.inst-chip-trans {
+  background: #eaf3ee;
+  color: #256b4a;
+}
+
+.inst-card-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.inst-card-price {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.inst-card-price-unit {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #888;
+}
+
+.inst-card-price-none {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: #888;
+}
+
+.inst-card-closed {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  color: #b4693f;
+}
+
+.inst-card-btn {
+  flex: 0 0 auto;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  background: var(--primary);
+  font-size: 0.87rem;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+}
+
+.inst-card-btn:hover {
+  background: #1740bd;
+}
