@@ -83,6 +83,10 @@ function AppHeader() {
       </NavLink>
 
       <nav className="topnav" aria-label="Primary">
+        <NavLink to="/instructors" className={({ isActive }) => "nav-link" + (isActive ? " nav-link-active" : "")}>
+          Find Instructors
+        </NavLink>
+
         <NavLink to="/services" className={({ isActive }) => "nav-link" + (isActive ? " nav-link-active" : "")}>
           Find Services
         </NavLink>
@@ -188,6 +192,7 @@ function AppHeader() {
 
       {menuOpen && (
         <div className="mobile-menu" role="dialog" aria-label="Mobile navigation">
+          <NavLink to="/instructors" className="mobile-nav-link" onClick={close}>Find Instructors</NavLink>
           <NavLink to="/services" className="mobile-nav-link" onClick={close}>Find Services</NavLink>
           <NavLink to="/providers" className="mobile-nav-link" onClick={close}>Providers</NavLink>
 

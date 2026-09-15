@@ -11,28 +11,28 @@ function HomeHero() {
 
       {/* Text content — sits above the CSS blob decorations via position:relative */}
       <div className="hero-content">
-        <p className="eyebrow">Appointment platform</p>
+        <p className="eyebrow">Driving lessons in Ireland</p>
 
         <h1>
-          Book trusted local
+          Find a driving instructor
           <br />
-          professionals in minutes.
+          you can trust.
         </h1>
 
         <p className="hero-copy">
-          Pro.me connects customers with verified barbers, tutors, and driving
-          instructors near you — simple booking, zero hassle.
+          Compare approved driving instructors across Ireland by county, test
+          centre and what they teach — with verified ADI status and real reviews.
         </p>
 
         <div className="hero-actions">
           {/* Primary CTA — navigates to the provider listings page */}
-          <Link className="button button-light" to="/providers">
-            Find services
+          <Link className="button button-light" to="/instructors">
+            Find an instructor
           </Link>
 
           {/* Secondary CTA — opens the registration form */}
           <Link className="button button-outline-light" to="/register">
-            Join as provider
+            Join as an instructor
           </Link>
         </div>
       </div>
