@@ -18,7 +18,9 @@ function initials(name) {
  *   review  — populated review object from the API
  */
 export default function ReviewCard({ review }) {
-  const name = review.reviewerId?.name ?? "Anonymous";
+  /* Null reviewerId means the learner deleted their account: the review
+     survives, the identity does not. */
+  const name = review.reviewerId?.name ?? "Deleted user";
   const avatarUrl = review.reviewerId?.avatarUrl ?? "";
   const service = review.serviceId?.subject ?? "Service";
 
