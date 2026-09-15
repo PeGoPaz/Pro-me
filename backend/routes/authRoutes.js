@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, providerType } = req.body;
 
     if (!name || !email || !password || !role) {
       return res.status(400).json({ message: "All fields are required" });
@@ -38,6 +38,14 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "Invalid role" });
     }
 
+    /* Providers must say which vertical they are in. Onboarding offers only
+       driving instructor or the generic "other" fallback. */
+    if (role === "enterprise" && !["driving_instructor", "other"].includes(providerType)) {
+      return res.status(400).json({
+        message: "Providers must choose a provider type of driving_instructor or other",
+      });
+    }
+
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(409).json({ message: "User already exists" });
@@ -50,6 +58,7 @@ router.post("/register", async (req, res) => {
       email: email.toLowerCase(),
       password: hashedPassword,
       role,
+      ...(role === "enterprise" ? { providerType } : {}),
     });
 
     return res.status(201).json({
@@ -59,6 +68,7 @@ router.post("/register", async (req, res) => {
         name: newUser.name,
         email: newUser.email,
         role: newUser.role,
+        providerType: newUser.providerType,
         avatarUrl: newUser.avatarUrl || "",
       },
     });

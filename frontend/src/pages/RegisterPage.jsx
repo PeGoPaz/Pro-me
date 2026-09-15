@@ -5,6 +5,9 @@ import api from "../api/index.js";
 function RegisterPage() {
   const navigate = useNavigate();
   const [role, setRole] = useState("customer");
+  /* Only asked for when signing up as a provider. Driving instructors are the
+     launch vertical; "other" is the fallback for every other business. */
+  const [providerType, setProviderType] = useState("driving_instructor");
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
@@ -36,6 +39,7 @@ function RegisterPage() {
         email: form.email,
         password: form.password,
         role: backendRole,
+        ...(backendRole === "enterprise" ? { providerType } : {}),
       });
       /* Registration successful — go to login */
       navigate("/login");
@@ -79,6 +83,28 @@ function RegisterPage() {
             Service Provider
           </button>
         </div>
+
+        {role === "provider" && (
+          <div className="provider-type-choice" role="group" aria-label="Provider type">
+            <p className="provider-type-label">What do you do?</p>
+            <button
+              type="button"
+              className={`provider-type-btn ${providerType === "driving_instructor" ? "provider-type-btn-active" : ""}`}
+              onClick={() => setProviderType("driving_instructor")}
+              aria-pressed={providerType === "driving_instructor"}
+            >
+              Driving Instructor
+            </button>
+            <button
+              type="button"
+              className={`provider-type-btn ${providerType === "other" ? "provider-type-btn-active" : ""}`}
+              onClick={() => setProviderType("other")}
+              aria-pressed={providerType === "other"}
+            >
+              Other business
+            </button>
+          </div>
+        )}
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
           {serverError && (
