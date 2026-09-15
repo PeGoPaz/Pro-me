@@ -20,6 +20,12 @@ import {
   toOwnerProfile,
   toPublicProfile,
 } from "../utils/instructorSerializer.js";
+import {
+  buildInstructorQuery,
+  buildInstructorSort,
+  buildPagination,
+  DEFAULT_SORT,
+} from "../utils/instructorSearch.js";
 
 const router = express.Router();
 
@@ -48,6 +54,92 @@ const reviewStatsFor = async (instructorUserId) => {
       : null;
   return { reviewCount, averageRating };
 };
+
+/* ── GET /api/instructors — the filtered search page ───────────────────
+   One list-based page with filters, as the roadmap specifies, rather than a
+   separate SEO page per county or test centre. */
+router.get("/", async (req, res) => {
+  try {
+    const query = buildInstructorQuery(req.query);
+    const sort = buildInstructorSort(req.query.sort ?? DEFAULT_SORT);
+    const { page, limit, skip } = buildPagination(req.query);
+
+    /* verificationRank is derived, not stored: it exists so a single sort can
+       put verified profiles above unverified ones without a second query. */
+    const pipeline = [
+      { $match: query },
+      {
+        $addFields: {
+          verificationRank: {
+            $cond: [{ $eq: ["$verification.status", "verified"] }, 1, 0],
+          },
+        },
+      },
+      { $sort: sort },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: "$user" },
+      /* Review stats come from the reviews collection so the rating on a card
+         cannot drift from the reviews on the profile. */
+      {
+        $lookup: {
+          from: "reviews",
+          localField: "userId",
+          foreignField: "providerId",
+          as: "reviews",
+        },
+      },
+    ];
+
+    const [rows, total] = await Promise.all([
+      InstructorProfile.aggregate(pipeline),
+      InstructorProfile.countDocuments(query),
+    ]);
+
+    const results = rows.map((row) => {
+      const ratings = (row.reviews ?? []).map((review) => review.rating);
+      const reviewCount = ratings.length;
+      const averageRating =
+        reviewCount > 0
+          ? Math.round((ratings.reduce((sum, r) => sum + r, 0) / reviewCount) * 10) / 10
+          : null;
+
+      return toPublicProfile(row, { user: row.user, reviewCount, averageRating });
+    });
+
+    /* minRating filters on a value computed from the reviews collection, so it
+       is applied after the lookup rather than in the Mongo match. */
+    const minRating = Number(req.query.minRating);
+    const filtered = Number.isFinite(minRating)
+      ? results.filter((r) => r.averageRating !== null && r.averageRating >= minRating)
+      : results;
+
+    return res.json({
+      results: filtered,
+      page,
+      limit,
+      total,
+      totalPages: Math.max(Math.ceil(total / limit), 1),
+      /* The roadmap asks for the ranking to be documented. Saying it in the
+         response keeps the UI honest about why the order is what it is. */
+      sort: req.query.sort ?? DEFAULT_SORT,
+      sortExplanation:
+        "Verified instructors first, then profile completeness and review count. " +
+        "Self-reported lesson counts do not affect ranking.",
+    });
+  } catch (error) {
+    console.error("Instructor search error:", error.message);
+    return res.status(500).json({ message: "Failed to search instructors" });
+  }
+});
 
 /* ── GET /api/instructors/:id — the public profile ─────────────────────── */
 router.get("/:id", async (req, res, next) => {
