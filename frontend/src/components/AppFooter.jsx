@@ -12,8 +12,8 @@ function AppFooter() {
         <div className="footer-brand-col">
           <p className="footer-brand">Pro.me</p>
           <p className="footer-tagline">
-            Book trusted local professionals in minutes. Barbers, tutors,
-            driving instructors — all in one place.
+            Find and compare approved driving instructors across Ireland,
+            with verified ADI status, reviews and real availability.
           </p>
 
           {/* Social icon links */}

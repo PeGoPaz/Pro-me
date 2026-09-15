@@ -1,15 +1,9 @@
-import barberImage from "../assets/images/barber.jpg";
 import drivingImage from "../assets/images/driving.jpg";
-import tutoringImage from "../assets/images/tutoring.jpg";
-import spaBeautyImage from "../assets/images/spabeauty.jpg";
-import healthWellnessImage from "../assets/images/healthwellness.jpeg";
 
+/* Only the two live verticals remain. "Other" has no cover image of its own —
+   callers fall back to a gradient when this returns null. */
 const CATEGORY_IMAGES = {
-  Barber: barberImage,
   Driving: drivingImage,
-  Tutoring: tutoringImage,
-  "Beauty & Spa": spaBeautyImage,
-  "Health & Wellness": healthWellnessImage,
 };
 
 export function getCategoryImage(category) {

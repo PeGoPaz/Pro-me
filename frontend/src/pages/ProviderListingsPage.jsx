@@ -3,15 +3,11 @@ import { Link } from "react-router-dom";
 import api from "../api/index.js";
 
 const CATEGORY_COLORS = {
-  Barber:               { bg: "#2c2c2c", text: "#fff" },
-  Driving:              { bg: "#1e4bdd", text: "#fff" },
-  Tutoring:             { bg: "#3d5a80", text: "#fff" },
-  "Beauty & Spa":       { bg: "#8b5e7a", text: "#fff" },
-  "Health & Wellness":  { bg: "#1a6b5a", text: "#fff" },
-  Other:                { bg: "#555",    text: "#fff" },
+  Driving: { bg: "#1e4bdd", text: "#fff" },
+  Other:   { bg: "#555",    text: "#fff" },
 };
 
-const ALL_CATEGORIES = ["All", ...Object.keys(CATEGORY_COLORS).filter((k) => k !== "Other")];
+const ALL_CATEGORIES = ["All", ...Object.keys(CATEGORY_COLORS)];
 
 function ProviderCard({ provider }) {
   const initials = provider.name
