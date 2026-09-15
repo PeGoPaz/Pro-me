@@ -34,6 +34,19 @@ Pro.me is a full-stack web application that connects customers with local servic
 
 ### Backend Setup
 
+The quickest way to get running is against a throwaway in-memory database —
+no MongoDB instance, no configuration, seeded with sample instructors:
+
+```bash
+cd backend
+npm install
+npm run dev:memory
+```
+
+Nothing is persisted; the database is rebuilt on every run.
+
+To run against a real MongoDB instead:
+
 ```bash
 cd backend
 npm install
@@ -43,6 +56,8 @@ npm start
 ```
 
 Backend runs on `http://localhost:9000`
+
+Run the backend tests with `npm test`.
 
 ### Frontend Setup
 
