@@ -67,8 +67,8 @@ function AppFooter() {
           <ul className="footer-col-links">
             <li><a href="#">Help Centre</a></li>
             <li><Link to="/contact">Contact Us</Link></li>
-            <li><a href="#">Privacy Policy</a></li>
-            <li><a href="#">Terms of Service</a></li>
+            <li><Link to="/privacy">Privacy Policy</Link></li>
+            <li><Link to="/terms">Terms of Service</Link></li>
           </ul>
         </div>
       </div>
@@ -77,9 +77,8 @@ function AppFooter() {
       <div className="footer-bottom">
         <p className="footer-meta">© {year} Pro.me. All rights reserved.</p>
         <nav className="footer-bottom-links" aria-label="Legal">
-          <a href="#">Privacy</a>
-          <a href="#">Terms</a>
-          <a href="#">Cookies</a>
+          <Link to="/privacy">Privacy</Link>
+          <Link to="/terms">Terms</Link>
         </nav>
       </div>
     </footer>
