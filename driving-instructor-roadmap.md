@@ -140,10 +140,10 @@ One instructor can select multiple categories. The data model must store categor
 
 ### Location model (RSA-verified)
 
-The RSA ADI register organises instructors by **county** (26 counties), and driving test centres (41 locations nationwide) are also listed by county. Centres do not nest cleanly under cities — some counties have multiple centres, some have none, and Dublin has several. Therefore:
+The RSA ADI register organises instructors by **county** (26 counties), and driving test centres are also listed by county. The RSA's page headlines "41 test centre locations", but its own register API returns **62 venues** — 41 counts towns, while several towns run more than one venue (Birr and "Birr (County Arms Hotel)", the Portlaoise and Carlow hotel overflow venues, Tralee and "Tralee (HGV's)"). We store the 62 venues, because a venue is what an instructor serves and what a learner drives to. Centres do not nest cleanly under cities — every one of the 26 counties has at least one venue (verified against the register), many have several, and Dublin has eight. Therefore:
 
 - **Primary location axis: county (multi-select).** This matches the RSA's own search UX and how instructors think about coverage.
-- **Secondary axis: test centres served** — a flat, admin-curated list of the 41 RSA test centre locations, optionally grouped by county. Instructors pick any centres they serve; centres are not constrained under a city.
+- **Secondary axis: test centres served** — a flat list of the 62 RSA test centre venues, optionally grouped by county. Imported from the RSA register API with county, Eircode, coordinates and the licence categories each venue tests, so it is not hand-curated and can be refreshed from source. Instructors pick any centres they serve; centres are not constrained under a city.
 - **City is display-only**, if shown at all — never the structured filter axis.
 
 This replaces the earlier "multi-select city → constrained test centre" model, which did not match Irish geography.
@@ -413,7 +413,8 @@ The current code still carries the old broad-marketplace assumptions and must be
 - RSA official ADI register (categories + counties): rsa.ie/services/learner-drivers/driving-lessons/find-an-instructor/approved-driving-instructor
 - Adding categories to an ADI permit: rsa.ie/.../add-categories-to-your-adi-permit
 - ADI regulations & penalties: rsa.ie/.../regulations (S.I. No. 146/2009 et al.)
-- Driving test centres by county (41 locations): rsa.ie/services/learner-drivers/the-driving-test/driving-test-centres
+- Driving test centres by county (62 venues across 41 towns): rsa.ie/services/learner-drivers/the-driving-test/driving-test-centres
+- Test centre register API (source of `backend/data/testCentres.js`): rsa.ie/capi/services/getapiasync?endpoint=api/finder/drivingtestcentres
 - DSA obligations cited above: Regulation (EU) 2022/2065, Arts. 16, 19, 24, 27, 29 (Official Journal text; e.g. eu-digital-services-act.com mirror)
 
 ## Summary
