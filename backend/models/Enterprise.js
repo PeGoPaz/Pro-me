@@ -13,7 +13,10 @@ const enterpriseSchema = new mongoose.Schema({
     },
     category: {
         type: String,
-        enum: ["Barber", "Driving", "Tutoring", "Beauty & Spa", "Health & Wellness", "Other"],
+        /* Narrowed from the old multi-vertical marketplace. The platform is
+           Ireland-first for driving instructors; "Other" is the fallback for
+           non-driving businesses until they get their own vertical. */
+        enum: ["Driving", "Other"],
         default: "Other",
         trim: true
     },
