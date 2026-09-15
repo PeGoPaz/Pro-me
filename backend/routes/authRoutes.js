@@ -2,6 +2,10 @@ import express from "express";
 import bcrypt from "bcrypt";
 import validator from "validator";
 import User from "../models/User.js";
+import Review from "../models/Review.js";
+import Enterprise from "../models/Enterprise.js";
+import Favorite from "../models/Favorite.js";
+import InstructorProfile from "../models/InstructorProfile.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = express.Router();
@@ -207,6 +211,58 @@ router.post("/logout", requireAuth, (req, res) => {
     res.clearCookie("pro.me.sid");
     return res.status(200).json({ message: "Logout successful" });
   });
+});
+
+/*
+ * DELETE /api/auth/me — account deletion (GDPR right to erasure).
+ *
+ * The two roles are handled differently on purpose, because a review and a
+ * booking are not solely the deleted person's data:
+ *
+ *   Learner — their reviews are anonymised rather than removed. A review is
+ *     about the instructor as much as it is by the learner, and deleting it
+ *     would silently rewrite that instructor's rating history. Their own
+ *     bookings go with them.
+ *
+ *   Instructor — the profile and listings are removed, but the reviews written
+ *     about them and the learners' booking history stay. That history belongs
+ *     to the learners, and an instructor must not be able to erase a bad record
+ *     by deleting their account.
+ */
+router.delete("/me", requireAuth, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+
+    const user = await User.findById(userId).select("role");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.role === "user") {
+      /* Keep the review text and rating, cut the link to the person. */
+      await Review.updateMany({ reviewerId: userId }, { $set: { reviewerId: null } });
+      /* A shortlist is purely the learner's own data. */
+      await Favorite.deleteMany({ userId });
+    } else {
+      await InstructorProfile.deleteOne({ userId });
+      await Enterprise.deleteMany({ userId });
+      /* Anyone who had saved this instructor loses a dangling entry. */
+      await Favorite.deleteMany({ instructorId: userId });
+    }
+
+    await User.findByIdAndDelete(userId);
+
+    return req.session.destroy((error) => {
+      if (error) {
+        console.error("Session destroy on delete failed:", error);
+      }
+      res.clearCookie("pro.me.sid");
+      return res.status(200).json({ message: "Your account has been deleted" });
+    });
+  } catch (error) {
+    console.error("Account deletion error:", error.message);
+    return res.status(500).json({ message: "Failed to delete account" });
+  }
 });
 
 export default router;
