@@ -5,7 +5,7 @@ import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import mongoSanitize from 'express-mongo-sanitize';
+import sanitizeRequest from './middleware/sanitize.js';
 import 'dotenv/config';
 import enterpriseRoutes from './routes/enterpriseRoutes.js';
 import authRoutes from './routes/authRoutes.js';
@@ -18,9 +18,6 @@ const port = process.env.PORT || 9000;
 
 // Security: Set security headers
 app.use(helmet());
-
-// Security: Sanitize data to prevent NoSQL injection
-app.use(mongoSanitize());
 
 // Security: CORS configuration - restrict to specific origin in production
 const allowedOrigins = process.env.CLIENT_ORIGIN 
@@ -68,6 +65,10 @@ const authLimiter = rateLimit({
 });
 
 app.use(express.json({ limit: '5mb' }));
+
+// Security: Strip Mongo operators from input to prevent NoSQL injection.
+// Registered after express.json() so req.body is already parsed.
+app.use(sanitizeRequest);
 
 const mongoUri = process.env.MONGO_URI;
 if (!mongoUri) {
