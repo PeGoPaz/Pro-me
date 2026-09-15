@@ -156,7 +156,12 @@ const instructorProfileSchema = new mongoose.Schema(
 /* Search filters hit these together, county and centre being the strongest. */
 instructorProfileSchema.index({ counties: 1 });
 instructorProfileSchema.index({ testCentres: 1 });
-instructorProfileSchema.index({ licenceCategories: 1, transmission: 1 });
+/* These two must stay SEPARATE single-field indexes. Both fields are arrays,
+   and MongoDB refuses to build a compound index across two array fields
+   ("cannot index parallel arrays"), which fails every insert rather than just
+   the index build. Multikey indexes on each field serve the filters fine. */
+instructorProfileSchema.index({ licenceCategories: 1 });
+instructorProfileSchema.index({ transmission: 1 });
 instructorProfileSchema.index({ isPublished: 1, acceptingNewStudents: 1 });
 /* Default ranking puts verified profiles first, then completeness. */
 instructorProfileSchema.index({ "verification.status": 1, profileCompleteness: -1 });
