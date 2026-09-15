@@ -12,6 +12,7 @@ import authRoutes from './routes/authRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import referenceRoutes from './routes/referenceRoutes.js';
+import favoriteRoutes from './routes/favoriteRoutes.js';
 
 // app config
 const app = express();
@@ -111,6 +112,7 @@ app.use('/api/booking', bookingRoutes);
 app.use('/api/enterprise', enterpriseRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/reference', referenceRoutes);
+app.use('/api/favorites', favoriteRoutes);
 
 // Security: 404 handler for undefined routes
 app.use((req, res) => {
