@@ -1,11 +1,4 @@
-const SERVICE_CATEGORIES = [
-  "Barber",
-  "Driving",
-  "Tutoring",
-  "Beauty & Spa",
-  "Health & Wellness",
-  "Other",
-];
+const SERVICE_CATEGORIES = ["Driving", "Other"];
 
 /**
  * Modal for creating or editing a provider service.

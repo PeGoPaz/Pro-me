@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import HomeHero from "../components/HomeHero";
 import ServiceCard from "../components/ServiceCard";
 import api from "../api/index.js";
 import { getCategoryImage } from "../utils/categoryImages";
 
-const CATEGORIES = ["All", "Barber", "Driving", "Tutoring", "Beauty & Spa", "Health & Wellness"];
+const CATEGORIES = ["All", "Driving", "Other"];
 
 function HomePage() {
   const [category, setCategory] = useState("All");

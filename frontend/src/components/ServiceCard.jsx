@@ -3,11 +3,8 @@ import { useAuth } from "../context/AuthContext";
 import { getCategoryImage } from "../utils/categoryImages";
 
 const CATEGORY_GRADIENTS = {
-  Barber:            "linear-gradient(135deg, #2c2c2c 0%, #4a4a4a 100%)",
-  Driving:           "linear-gradient(135deg, #162ea3 0%, #2f66ff 100%)",
-  Tutoring:          "linear-gradient(135deg, #3d5a80 0%, #6b9dc7 100%)",
-  "Beauty & Spa":    "linear-gradient(135deg, #8b5e7a 0%, #c49ab0 100%)",
-  "Health & Wellness": "linear-gradient(135deg, #1a6b5a 0%, #3aab8c 100%)",
+  Driving: "linear-gradient(135deg, #162ea3 0%, #2f66ff 100%)",
+  Other:   "linear-gradient(135deg, #555 0%, #888 100%)",
 };
 
 /**

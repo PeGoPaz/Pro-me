@@ -11,9 +11,8 @@ function ServiceSearchForm({ filters, errors, onChange, onSubmit }) {
         <span className="search-field-label">Service type</span>
         <select name="category" value={filters.category} onChange={onChange}>
           <option value="all">All services</option>
-          <option value="barber">Barber</option>
           <option value="driving">Driving lessons</option>
-          <option value="tutoring">Tutoring</option>
+          <option value="other">Other</option>
         </select>
       </label>
 
@@ -23,7 +22,7 @@ function ServiceSearchForm({ filters, errors, onChange, onSubmit }) {
         <input
           name="location"
           type="text"
-          placeholder="e.g. Dublin 8"
+          placeholder="e.g. Dublin"
           value={filters.location}
           onChange={onChange}
           aria-describedby={errors.location ? "location-error" : undefined}

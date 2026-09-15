@@ -2,9 +2,8 @@ import { Link } from "react-router-dom";
 
 /* Human-readable labels for each service category badge */
 const CATEGORY_LABELS = {
-  barber: "Barber",
   driving: "Driving",
-  tutoring: "Tutoring",
+  other: "Other",
 };
 
 /*
