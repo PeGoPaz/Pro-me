@@ -388,15 +388,28 @@ These are not committed for now, but they could make the platform stronger if th
 
 ## Known Code Debt (legacy multi-vertical marketplace)
 
-The current code still carries the old broad-marketplace assumptions and must be aligned in Phase 1:
+Most of this is now cleared. Kept here with outcomes rather than deleted, because
+the two remaining items still bite.
 
-- `backend/models/Enterprise.js` category enum includes Barber, Tutoring, Beauty & Spa, Health & Wellness — reduce to Driving / Other.
-- `frontend/src/utils/categoryImages.js` and `ServiceSearchForm.jsx` hard-code the old verticals.
-- No Favorite, Subscription, City/County, TestCentre, or moderation models exist yet.
-- No delete-account endpoints exist anywhere.
-- Avatars are stored as base64 data URLs (up to 2MB) in Mongo — fine for avatars, not viable for galleries.
-- `xss-clean` is a deprecated dependency; remove or replace it.
-- Production cookies use SameSite=strict — keep frontend and API under one registrable domain or sessions break.
+**Resolved:**
+
+- ~~`backend/models/Enterprise.js` category enum includes Barber, Tutoring, Beauty & Spa, Health & Wellness~~ — reduced to Driving / Other, and providers now pick `driving_instructor` or `other` at signup.
+- ~~`frontend/src/utils/categoryImages.js` and `ServiceSearchForm.jsx` hard-code the old verticals~~ — removed everywhere; `ServiceSearchForm.jsx` is deleted along with `/services`, the `/providers` listing and six other orphaned components.
+- ~~No Favorite, Subscription, City/County, TestCentre, or moderation models exist yet~~ — Favorite, Report and InstructorProfile (carrying subscription and verification) exist; counties and test centres are committed reference data served from `/api/reference`.
+- ~~No delete-account endpoints exist anywhere~~ — `DELETE /api/auth/me` exists, anonymising a departing learner's reviews rather than deleting them.
+- ~~`xss-clean` is a deprecated dependency~~ — removed. `express-mongo-sanitize` went with it: it assigns `req.query`, which is getter-only in Express 5, so every request carrying a query string returned 500. Replaced by `backend/middleware/sanitize.js`.
+- ~~Production cookies use SameSite=strict — keep frontend and API under one registrable domain or sessions break~~ — this would have broken login on the shipped `render.yaml`, which runs the frontend and API as two `onrender.com` services, i.e. two registrable domains. Now defaults to `SameSite=None; Secure` in production, with `COOKIE_SAMESITE=strict` to switch back once both sit under one domain. **Putting them under one domain is still the better end state.**
+
+**Outstanding:**
+
+- **Avatars are stored as base64 data URLs (up to 2MB) in Mongo.** Acceptable for avatars, not viable for galleries. Blocked on the photo upload pipeline (multer + Cloudinary, both still unused dependencies) — until that exists there is nothing to replace them with.
+- **Bookings and reviews moved onto the instructor**, away from the `Enterprise` listing they used to hang off. `Enterprise` itself survives only as the `Other` category's listing model; it should be reconsidered when `Other` gets its own direction.
+
+### New debt introduced since
+
+- **No instructor can create a profile through the UI.** `PUT /api/instructors/me` exists and is tested, but nothing calls it — the step-by-step onboarding wizard this document specifies has not been built. Profiles can currently only be created via the API or the dev seed, which makes it the single biggest gap in Phase 1.
+- **No admin role or verification queue.** `User.role` is still `user | enterprise`, so nobody can move a profile to `verified` and the badge can never legitimately appear.
+- **The site scrolls horizontally by ~20px at 375px width** on every page. Mobile-first is a stated principle, so this matters.
 
 ## Technical Notes
 
