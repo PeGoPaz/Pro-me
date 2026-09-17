@@ -38,28 +38,35 @@ function HomeHero() {
       </div>
 
       {/*
-       * Stats bar — static figures shown beneath the headline.
-       * These will be replaced by real data from GET /api/stats
-       * in the next development iteration.
+       * Coverage bar.
+       *
+       * This used to read "10,000+ active users" and "50,000+ bookings made" —
+       * invented figures on a platform with no users at all. On a product whose
+       * entire pitch is that its numbers can be trusted, made-up social proof
+       * is the one thing we cannot ship; it is also the kind of claim the CCPC
+       * treats as a misleading commercial practice.
+       *
+       * These three are facts, and they come from the committed RSA reference
+       * data (backend/data/) rather than from a marketing deck.
        */}
       <div className="hero-stats">
         <div className="hero-stat">
-          <span className="hero-stat-value">10,000+</span>
-          <span className="hero-stat-label">Active users</span>
+          <span className="hero-stat-value">26</span>
+          <span className="hero-stat-label">Counties covered</span>
         </div>
 
         <span className="hero-stat-divider" aria-hidden="true" />
 
         <div className="hero-stat">
-          <span className="hero-stat-value">4.8 / 5</span>
-          <span className="hero-stat-label">Average rating</span>
+          <span className="hero-stat-value">62</span>
+          <span className="hero-stat-label">RSA test centres</span>
         </div>
 
         <span className="hero-stat-divider" aria-hidden="true" />
 
         <div className="hero-stat">
-          <span className="hero-stat-value">50,000+</span>
-          <span className="hero-stat-label">Bookings made</span>
+          <span className="hero-stat-value">ADI</span>
+          <span className="hero-stat-label">Verified against the register</span>
         </div>
       </div>
     </section>
