@@ -4909,6 +4909,33 @@ details[open] .contact-faq-q::after {
 }
 
 /* ── reviews ─────────────────────────────────────────────────────────── */
+.ip-review-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  border: 1px solid #e6e9f2;
+  border-radius: 10px;
+  background: #fbfcff;
+}
+
+.ip-review-comment {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1.5px solid #dfe4f2;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.92rem;
+  resize: vertical;
+}
+
+.ip-review-comment:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
 .ip-reviews {
   display: flex;
   flex-direction: column;

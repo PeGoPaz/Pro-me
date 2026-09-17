@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../api/index.js";
 import { useAuth } from "../context/AuthContext";
-import { StarDisplay } from "../components/StarRating";
+import { StarDisplay, StarPicker } from "../components/StarRating";
 import ReviewCard from "../components/ReviewCard";
 import ReportDialog from "../components/ReportDialog";
 
@@ -33,6 +33,10 @@ function InstructorProfilePage() {
   const [isSaved, setIsSaved] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [lightbox, setLightbox] = useState(null);
+  const [reviewForm, setReviewForm] = useState({ rating: 0, comment: "" });
+  const [reviewError, setReviewError] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewDone, setReviewDone] = useState(false);
 
   useEffect(() => {
     if (!instructorId) return undefined;
@@ -94,6 +98,10 @@ function InstructorProfilePage() {
     return () => { ignore = true; };
   }, [isLearner, instructorUserId]);
 
+  /* Learners only, and never your own profile. */
+  const canReview =
+    isLearner && instructorUserId && String(user?._id ?? user?.id) !== instructorUserId;
+
   const countyLabels = useMemo(
     () => Object.fromEntries((reference?.counties ?? []).map((c) => [c.slug, c.name])),
     [reference]
@@ -106,6 +114,36 @@ function InstructorProfilePage() {
     () => Object.fromEntries((reference?.licenceCategories ?? []).map((c) => [c.code, c.label])),
     [reference]
   );
+
+  /* A review is now about the instructor, so no service has to be picked
+     first — which is what the old page made people do. */
+  const submitReview = async (event) => {
+    event.preventDefault();
+    setReviewError("");
+
+    if (reviewForm.rating === 0) {
+      setReviewError("Please choose a star rating.");
+      return;
+    }
+
+    try {
+      setReviewSubmitting(true);
+      const res = await api.post("/reviews", {
+        providerId: instructorUserId,
+        rating: reviewForm.rating,
+        comment: reviewForm.comment.trim() || undefined,
+      });
+      setReviews((prev) => [res.data.review, ...prev]);
+      setReviewForm({ rating: 0, comment: "" });
+      setReviewDone(true);
+    } catch (err) {
+      setReviewError(
+        err?.response?.data?.message || "Could not submit your review. Please try again."
+      );
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
 
   const toggleSave = async () => {
     if (!isLearner) {
@@ -345,6 +383,40 @@ function InstructorProfilePage() {
             </span>
           )}
         </h2>
+
+        {canReview && !reviewDone && (
+          <form className="ip-review-form" onSubmit={submitReview} noValidate>
+            {reviewError && <div className="report-error" role="alert">{reviewError}</div>}
+
+            <StarPicker
+              value={reviewForm.rating}
+              onChange={(rating) => setReviewForm((prev) => ({ ...prev, rating }))}
+            />
+
+            <textarea
+              rows={3}
+              maxLength={1000}
+              className="ip-review-comment"
+              placeholder="How were your lessons? (optional)"
+              value={reviewForm.comment}
+              onChange={(e) => setReviewForm((prev) => ({ ...prev, comment: e.target.value }))}
+            />
+
+            <button type="submit" className="button button-primary" disabled={reviewSubmitting}>
+              {reviewSubmitting ? "Posting…" : "Post review"}
+            </button>
+          </form>
+        )}
+
+        {reviewDone && (
+          <p className="ip-subtle">Thanks — your review has been posted.</p>
+        )}
+
+        {!user && (
+          <p className="ip-subtle">
+            <Link to="/login" className="legal-link">Sign in</Link> to leave a review.
+          </p>
+        )}
 
         {reviews.length === 0 ? (
           <p className="ip-subtle">No reviews yet.</p>
