@@ -85,6 +85,40 @@ if (!sessionSecret && process.env.NODE_ENV === 'production') {
     throw new Error('SESSION_SECRET must be set in production');
 }
 
+/*
+ * Session cookie SameSite policy.
+ *
+ * This was hard-coded to 'strict' in production, which silently broke login on
+ * the deployment we actually ship. render.yaml runs the frontend and the API as
+ * two separate services — pro-me-frontend.onrender.com and
+ * pro-me-backend.onrender.com. `onrender.com` is on the Public Suffix List, so
+ * those are two different registrable domains and every API call from the
+ * frontend is a cross-site request. A SameSite=strict (or lax) cookie is simply
+ * not attached to those, so login would report success and the very next
+ * /auth/me would return 401, with nothing in the logs to explain it.
+ *
+ * 'none' fixes that, at the cost of the SameSite CSRF protection. Two things
+ * carry that weight instead: CORS is restricted to an explicit origin
+ * allowlist, and every mutating route consumes JSON, so a cross-origin POST
+ * needs a preflight that the allowlist rejects — a plain HTML form from an
+ * attacker's page cannot produce one.
+ *
+ * Set COOKIE_SAMESITE=strict once the frontend and API live under one
+ * registrable domain (e.g. app.example.ie and api.example.ie). That is the
+ * safer arrangement and the one to aim for.
+ */
+const configuredSameSite = process.env.COOKIE_SAMESITE;
+const sameSite = configuredSameSite
+    || (process.env.NODE_ENV === 'production' ? 'none' : 'lax');
+
+/* Browsers reject SameSite=None unless the cookie is also Secure, and reject it
+   silently — so a misconfiguration here would look exactly like the bug above. */
+const secureCookie = sameSite === 'none' ? true : process.env.NODE_ENV === 'production';
+
+if (sameSite === 'none' && process.env.NODE_ENV !== 'production') {
+    console.warn('COOKIE_SAMESITE=none requires HTTPS; sessions will not work over plain http://localhost.');
+}
+
 app.use(
     session({
         name: 'pro.me.sid',
@@ -93,8 +127,8 @@ app.use(
         saveUninitialized: false,
         cookie: {
             httpOnly: true,
-            sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-            secure: process.env.NODE_ENV === 'production',
+            sameSite,
+            secure: secureCookie,
             maxAge: 1000 * 60 * 60 * 24 * 7,
         },
         store: MongoStore.create({
