@@ -358,7 +358,7 @@ function ProviderDashboardPage() {
               <li key={b._id} className="dash-booking-card">
                 <div className="dash-booking-top">
                   <div>
-                    <p className="dash-booking-service">{b.enterpriseId?.subject ?? "Booking"}</p>
+                    <p className="dash-booking-service">{b.serviceId?.subject ?? "Driving lesson"}</p>
                     <p className="dash-booking-customer">
                       Customer: <strong>{b.userId?.name ?? "Unknown"}</strong>
                       {b.userId?.email && <span className="dash-booking-customer-email"> · {b.userId.email}</span>}
@@ -391,7 +391,7 @@ function ProviderDashboardPage() {
               <li key={b._id} className="dash-booking-card">
                 <div className="dash-booking-top">
                   <div>
-                    <p className="dash-booking-service">{b.enterpriseId?.subject ?? "Booking"}</p>
+                    <p className="dash-booking-service">{b.serviceId?.subject ?? "Driving lesson"}</p>
                     <p className="dash-booking-customer">Customer: <strong>{b.userId?.name ?? "Unknown"}</strong></p>
                     <p className="dash-booking-date">{formatDate(b.bookingDate)}</p>
                   </div>
@@ -417,7 +417,7 @@ function ProviderDashboardPage() {
               <li key={b._id} className="dash-booking-card dash-booking-card-muted">
                 <div className="dash-booking-top">
                   <div>
-                    <p className="dash-booking-service">{b.enterpriseId?.subject ?? "Booking"}</p>
+                    <p className="dash-booking-service">{b.serviceId?.subject ?? "Driving lesson"}</p>
                     <p className="dash-booking-customer">Customer: <strong>{b.userId?.name ?? "Unknown"}</strong></p>
                     <p className="dash-booking-date">{formatDate(b.bookingDate)}</p>
                   </div>
@@ -441,7 +441,7 @@ function ProviderDashboardPage() {
               <li key={b._id} className="dash-booking-card dash-booking-card-muted">
                 <div className="dash-booking-top">
                   <div>
-                    <p className="dash-booking-service">{b.enterpriseId?.subject ?? "Booking"}</p>
+                    <p className="dash-booking-service">{b.serviceId?.subject ?? "Driving lesson"}</p>
                     <p className="dash-booking-customer">
                       Customer: <strong>{b.userId?.name ?? "Unknown"}</strong>
                       {b.userId?.email && (

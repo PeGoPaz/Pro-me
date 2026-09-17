@@ -2,7 +2,6 @@ import express from "express";
 import mongoose from "mongoose";
 
 import Enterprise from "../models/Enterprise.js";
-import Booking from "../models/Booking.js";
 import User from "../models/User.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 
@@ -241,70 +240,12 @@ router.delete("/:enterpriseId/services/:id", async (req, res) => {
   }
 });
 
-router.get("/:enterpriseId/bookings", async (req, res) => {
-  try {
-    const { enterpriseId } = req.params;
-    if (!isValidObjectId(enterpriseId)) {
-      return res.status(400).json({ message: "Invalid enterprise id" });
-    }
-    if (req.session.user.id !== enterpriseId) {
-      return res.status(403).json({ message: "You can only view your own bookings" });
-    }
-
-    const services = await Enterprise.find({ userId: enterpriseId }).select("_id");
-    const serviceIds = services.map((service) => service._id);
-
-    const bookings = await Booking.find({ enterpriseId: { $in: serviceIds } })
-      .populate("userId", "name email")
-      .populate("enterpriseId", "subject price")
-      .sort({ createdAt: -1 });
-
-    return res.json(bookings);
-  } catch (error) {
-    console.error("Bookings fetch error:", error.message);
-    return res.status(500).json({ message: "Failed to fetch bookings" });
-  }
-});
-
-router.patch("/:enterpriseId/bookings/:id/status", async (req, res) => {
-  try {
-    const { enterpriseId, id } = req.params;
-    if (!isValidObjectId(enterpriseId)) {
-      return res.status(400).json({ message: "Invalid enterprise id" });
-    }
-    if (req.session.user.id !== enterpriseId) {
-      return res.status(403).json({ message: "You can only update bookings for your own services" });
-    }
-    if (!isValidObjectId(id)) {
-      return res.status(400).json({ message: "Invalid booking id" });
-    }
-
-    const { status } = req.body;
-    const allowedStatuses = ["pending", "confirmed", "cancelled"];
-    if (!allowedStatuses.includes(status)) {
-      return res.status(400).json({
-        message: `status must be one of: ${allowedStatuses.join(", ")}`,
-      });
-    }
-
-    const booking = await Booking.findById(id).populate("enterpriseId", "userId");
-
-    if (!booking) {
-      return res.status(404).json({ message: "Booking not found" });
-    }
-
-    if (!booking.enterpriseId || String(booking.enterpriseId.userId) !== String(enterpriseId)) {
-      return res.status(403).json({ message: "You cannot modify this booking" });
-    }
-
-    booking.status = status;
-    await booking.save();
-
-    return res.json(booking);
-  } catch (error) {
-    console.error("Booking status update error:", error.message);
-    return res.status(500).json({ message: "Failed to update booking status" });
-  }
-});
+/*
+ * The two booking endpoints that used to live here — GET /:enterpriseId/bookings
+ * and PATCH /:enterpriseId/bookings/:id/status — have been removed. They
+ * duplicated /api/booking, nothing in the frontend called them, and they
+ * queried bookings through the services table, which no longer reflects how a
+ * booking is stored now that it points at the instructor directly.
+ */
 
 export default router;

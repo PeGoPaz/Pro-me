@@ -2,37 +2,74 @@ import express from "express";
 import mongoose from "mongoose";
 import Booking from "../models/Booking.js";
 import Enterprise from "../models/Enterprise.js";
+import User from "../models/User.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 
 const router = express.Router();
 
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+/*
+ * Bookings are now keyed on the instructor's user account rather than on an
+ * Enterprise listing, so every ownership check here is a direct comparison
+ * instead of a detour through the services table.
+ */
+
 router.use(requireAuth);
 
+/* Both roles read bookings with the same shape. */
+const populateBooking = (query) =>
+  query
+    .populate("userId", "name email role")
+    .populate("instructorId", "name email avatarUrl")
+    .populate("serviceId", "subject price");
+
+/* ── POST /api/booking — a learner requests a lesson ───────────────────── */
 router.post("/", requireRole(["user"]), async (req, res) => {
   try {
-    const { enterpriseId, bookingDate, notes } = req.body;
+    const { instructorId, serviceId, bookingDate, notes } = req.body;
     const userId = req.session.user.id;
 
-    if (!enterpriseId || !bookingDate) {
+    if (!instructorId || !bookingDate) {
       return res
         .status(400)
-        .json({ message: "enterpriseId and bookingDate are required" });
+        .json({ message: "instructorId and bookingDate are required" });
     }
 
-    if (
-      !mongoose.Types.ObjectId.isValid(userId) ||
-      !mongoose.Types.ObjectId.isValid(enterpriseId)
-    ) {
-      return res.status(400).json({ message: "Invalid userId or enterpriseId" });
+    if (!isValidObjectId(instructorId)) {
+      return res.status(400).json({ message: "Invalid instructorId" });
     }
 
-    const enterpriseService = await Enterprise.findById(enterpriseId);
-    if (!enterpriseService) {
-      return res.status(404).json({ message: "Enterprise service not found" });
+    if (instructorId === userId) {
+      return res.status(400).json({ message: "You cannot book yourself" });
     }
 
-    if (enterpriseService.userId.toString() === userId) {
-      return res.status(400).json({ message: "You cannot book your own service" });
+    const instructor = await User.findOne({
+      _id: instructorId,
+      role: "enterprise",
+    }).select("_id");
+    if (!instructor) {
+      return res.status(404).json({ message: "Instructor not found" });
+    }
+
+    /* Optional listing link, only used by the Other category. It must belong
+       to the instructor being booked, or it is a way to attach someone else's
+       listing to this booking. */
+    let resolvedServiceId = null;
+    if (serviceId) {
+      if (!isValidObjectId(serviceId)) {
+        return res.status(400).json({ message: "Invalid serviceId" });
+      }
+      const service = await Enterprise.findOne({
+        _id: serviceId,
+        userId: instructorId,
+      }).select("_id");
+      if (!service) {
+        return res
+          .status(400)
+          .json({ message: "That service does not belong to this instructor" });
+      }
+      resolvedServiceId = service._id;
     }
 
     const parsedDate = new Date(bookingDate);
@@ -42,7 +79,8 @@ router.post("/", requireRole(["user"]), async (req, res) => {
 
     const newBooking = await Booking.create({
       userId,
-      enterpriseId,
+      instructorId,
+      serviceId: resolvedServiceId,
       bookingDate: parsedDate,
       notes,
       status: "pending",
@@ -58,41 +96,22 @@ router.post("/", requireRole(["user"]), async (req, res) => {
   }
 });
 
+/* ── GET /api/booking — mine, whichever side I am on ───────────────────── */
 router.get("/", async (req, res) => {
   try {
-    const { enterpriseId } = req.query;
-    const filter = {};
     const sessionUserId = req.session.user.id;
     const sessionRole = req.session.user.role;
 
-    if (sessionRole === "user") {
-      filter.userId = sessionUserId;
-    }
+    /* A learner sees the requests they made; an instructor sees the requests
+       made to them. One field decides it either way. */
+    const filter =
+      sessionRole === "user"
+        ? { userId: sessionUserId }
+        : { instructorId: sessionUserId };
 
-    if (sessionRole === "enterprise") {
-      const ownServices = await Enterprise.find({ userId: sessionUserId }).select("_id");
-      filter.enterpriseId = { $in: ownServices.map((s) => s._id) };
-    }
-
-    if (enterpriseId && sessionRole === "enterprise") {
-      if (!mongoose.Types.ObjectId.isValid(enterpriseId)) {
-        return res.status(400).json({ message: "Invalid enterpriseId query" });
-      }
-
-      const ownService = await Enterprise.findOne({
-        _id: enterpriseId,
-        userId: sessionUserId,
-      }).select("_id");
-      if (!ownService) {
-        return res.status(403).json({ message: "You can only query your own services" });
-      }
-      filter.enterpriseId = ownService._id;
-    }
-
-    const bookings = await Booking.find(filter)
-      .populate("userId", "name email role")
-      .populate("enterpriseId", "subject price userId")
-      .sort({ createdAt: -1 });
+    const bookings = await populateBooking(Booking.find(filter)).sort({
+      createdAt: -1,
+    });
 
     return res.status(200).json(bookings);
   } catch (error) {
@@ -101,36 +120,26 @@ router.get("/", async (req, res) => {
   }
 });
 
+/* ── GET /api/booking/:id ──────────────────────────────────────────────── */
 router.get("/:id", async (req, res) => {
   try {
     const bookingId = req.params.id;
-    if (!mongoose.Types.ObjectId.isValid(bookingId)) {
+    if (!isValidObjectId(bookingId)) {
       return res.status(400).json({ message: "Invalid booking id" });
     }
 
-    const booking = await Booking.findById(bookingId)
-      .populate("userId", "name email role")
-      .populate("enterpriseId", "subject price userId");
-
+    const booking = await populateBooking(Booking.findById(bookingId));
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
     }
 
+    /* Only the two parties to a booking may read it. */
     const sessionUserId = req.session.user.id;
-    const sessionRole = req.session.user.role;
+    const learnerId = String(booking.userId?._id ?? booking.userId);
+    const instructorId = String(booking.instructorId?._id ?? booking.instructorId);
 
-    if (
-      sessionRole === "user" &&
-      booking.userId?._id?.toString() !== sessionUserId
-    ) {
+    if (sessionUserId !== learnerId && sessionUserId !== instructorId) {
       return res.status(403).json({ message: "Access denied" });
-    }
-
-    if (sessionRole === "enterprise") {
-      const service = await Enterprise.findById(booking.enterpriseId?._id || booking.enterpriseId);
-      if (!service || service.userId.toString() !== sessionUserId) {
-        return res.status(403).json({ message: "Access denied" });
-      }
     }
 
     return res.status(200).json(booking);
@@ -140,10 +149,11 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+/* ── PATCH /api/booking/:id — the learner edits their own request ──────── */
 router.patch("/:id", requireRole(["user"]), async (req, res) => {
   try {
     const bookingId = req.params.id;
-    if (!mongoose.Types.ObjectId.isValid(bookingId)) {
+    if (!isValidObjectId(bookingId)) {
       return res.status(400).json({ message: "Invalid booking id" });
     }
 
@@ -187,24 +197,22 @@ router.patch("/:id", requireRole(["user"]), async (req, res) => {
   }
 });
 
+/* ── DELETE /api/booking/:id ───────────────────────────────────────────── */
 router.delete("/:id", requireRole(["user"]), async (req, res) => {
   try {
     const bookingId = req.params.id;
-    if (!mongoose.Types.ObjectId.isValid(bookingId)) {
+    if (!isValidObjectId(bookingId)) {
       return res.status(400).json({ message: "Invalid booking id" });
     }
 
-    const booking = await Booking.findById(bookingId);
-    if (!booking) {
-      return res.status(404).json({ message: "Booking not found" });
-    }
+    const deleted = await Booking.findOneAndDelete({
+      _id: bookingId,
+      userId: req.session.user.id,
+    });
 
-    if (booking.userId.toString() !== req.session.user.id) {
-      return res.status(403).json({ message: "You can only delete your own booking" });
-    }
-
-    const deleted = await Booking.findByIdAndDelete(bookingId);
     if (!deleted) {
+      /* Either it does not exist or it is not theirs. Saying which would leak
+         whether a given booking id exists. */
       return res.status(404).json({ message: "Booking not found" });
     }
 
@@ -215,49 +223,45 @@ router.delete("/:id", requireRole(["user"]), async (req, res) => {
   }
 });
 
-router.patch(
-  "/:id/status",
-  requireRole(["enterprise"]),
-  async (req, res) => {
-    try {
-      const bookingId = req.params.id;
-      const { status } = req.body;
+/* ── PATCH /api/booking/:id/status — the instructor accepts or declines ── */
+router.patch("/:id/status", requireRole(["enterprise"]), async (req, res) => {
+  try {
+    const bookingId = req.params.id;
+    const { status } = req.body;
 
-      if (!mongoose.Types.ObjectId.isValid(bookingId)) {
-        return res.status(400).json({ message: "Invalid booking id" });
-      }
-
-      if (!["pending", "confirmed", "cancelled"].includes(status)) {
-        return res.status(400).json({ message: "Invalid status value" });
-      }
-
-      const booking = await Booking.findById(bookingId);
-      if (!booking) {
-        return res.status(404).json({ message: "Booking not found" });
-      }
-
-      const service = await Enterprise.findById(booking.enterpriseId);
-      if (!service || service.userId.toString() !== req.session.user.id) {
-        return res.status(403).json({ message: "You can only update bookings for your services" });
-      }
-
-      booking.status = status;
-      if (status === "confirmed") {
-        booking.confirmedAt = new Date();
-      } else if (status === "cancelled" || status === "pending") {
-        booking.confirmedAt = null;
-      }
-      await booking.save();
-
-      return res.status(200).json({
-        message: "Booking status updated",
-        booking,
-      });
-    } catch (error) {
-      console.error("Booking status update error:", error.message);
-      return res.status(500).json({ message: "Failed to update booking status" });
+    if (!isValidObjectId(bookingId)) {
+      return res.status(400).json({ message: "Invalid booking id" });
     }
+
+    if (!["pending", "confirmed", "cancelled"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+
+    const booking = await Booking.findOne({
+      _id: bookingId,
+      instructorId: req.session.user.id,
+    });
+
+    if (!booking) {
+      return res
+        .status(404)
+        .json({ message: "Booking not found" });
+    }
+
+    booking.status = status;
+    /* This timestamp is what the Phase 2 response-time indicator measures
+       against createdAt, so it is only set on a real confirmation. */
+    booking.confirmedAt = status === "confirmed" ? new Date() : null;
+    await booking.save();
+
+    return res.status(200).json({
+      message: "Booking status updated",
+      booking,
+    });
+  } catch (error) {
+    console.error("Booking status update error:", error.message);
+    return res.status(500).json({ message: "Failed to update booking status" });
   }
-);
+});
 
 export default router;

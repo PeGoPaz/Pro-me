@@ -15,6 +15,10 @@ function BookingPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  /* Two ways in. ?instructor=<userId> is the driving-instructor path and the
+     primary one; ?service=<enterpriseId> is the legacy listing path, still used
+     by the Other category. Either resolves to the same "who am I booking". */
+  const instructorId = searchParams.get("instructor");
   const serviceId = searchParams.get("service");
   const [service, setService] = useState(null);
   const [serviceLoading, setServiceLoading] = useState(true);
@@ -36,37 +40,40 @@ function BookingPage() {
   }, [user, navigate]);
 
   useEffect(() => {
-    if (!serviceId) {
+    if (!instructorId && !serviceId) {
       setServiceLoading(false);
-      return;
+      return undefined;
     }
 
     let ignore = false;
-    setServiceLoading(true);
 
-    api.get(`/enterprise/services/public/${serviceId}`)
-      .then((res) => {
-        if (ignore) return;
-        const fetched = res.data;
-        setService({
-          id: fetched._id,
-          name: fetched.subject,
-          author: fetched.userId?.name ?? "Service Provider",
-          category: fetched.category ?? "Other",
-          price: fetched.price,
-        });
-      })
-      .catch(() => {
-        if (!ignore) setService(null);
-      })
-      .finally(() => {
-        if (!ignore) setServiceLoading(false);
-      });
+    /* Both shapes are normalised into the same object so the rest of the page
+       does not have to care which link the learner arrived from. */
+    const request = instructorId
+      ? api.get(`/instructors/${instructorId}`).then((res) => ({
+          instructorId: String(res.data.userId),
+          serviceId: null,
+          name: "Driving lesson",
+          author: res.data.name ?? "Instructor",
+          category: "Driving",
+          price: res.data.pricePerLesson ?? 0,
+        }))
+      : api.get(`/enterprise/services/public/${serviceId}`).then((res) => ({
+          instructorId: String(res.data.userId?._id ?? res.data.userId),
+          serviceId: res.data._id,
+          name: res.data.subject,
+          author: res.data.userId?.name ?? "Service Provider",
+          category: res.data.category ?? "Other",
+          price: res.data.price,
+        }));
 
-    return () => {
-      ignore = true;
-    };
-  }, [serviceId]);
+    request
+      .then((normalised) => { if (!ignore) setService(normalised); })
+      .catch(() => { if (!ignore) setService(null); })
+      .finally(() => { if (!ignore) setServiceLoading(false); });
+
+    return () => { ignore = true; };
+  }, [instructorId, serviceId]);
 
   useEffect(() => {
     if (!service) return;
@@ -104,7 +111,10 @@ function BookingPage() {
     try {
       setLoading(true);
       await api.post("/booking", {
-        enterpriseId: service.id,
+        instructorId: service.instructorId,
+        /* Only sent for the Other category; the API rejects a service that
+           does not belong to the instructor being booked. */
+        ...(service.serviceId ? { serviceId: service.serviceId } : {}),
         bookingDate: form.bookingDate,
         notes: combinedNotes,
       });
@@ -175,11 +185,11 @@ function BookingPage() {
 
         {/* Header */}
         <div className="booking-header">
-          <Link to="/services" className="booking-back">
+          <Link to="/instructors" className="booking-back">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M19 12H5M5 12l7 7M5 12l7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            Back to services
+            Back to search
           </Link>
           <h1 className="booking-title">Book an Appointment</h1>
         </div>

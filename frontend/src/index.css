@@ -4757,6 +4757,22 @@ details[open] .contact-faq-q::after {
   }
 }
 
+.ip-book {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.6rem 1.1rem;
+  border-radius: 9px;
+  background: var(--primary);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+}
+
+.ip-book:hover {
+  background: #1740bd;
+}
+
 .ip-save {
   display: inline-flex;
   align-items: center;
