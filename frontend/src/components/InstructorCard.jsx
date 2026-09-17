@@ -144,7 +144,7 @@ function InstructorCard({
           )}
         </div>
 
-        <Link to={`/providers/${instructor.userId}`} className="inst-card-btn">
+        <Link to={`/instructors/${instructor.userId}`} className="inst-card-btn">
           View profile
         </Link>
       </div>

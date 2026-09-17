@@ -6,6 +6,7 @@ import BookingPage from "./pages/BookingPage";
 import ContactPage from "./pages/ContactPage";
 import CustomerDashboardPage from "./pages/CustomerDashboardPage";
 import HomePage from "./pages/HomePage";
+import InstructorProfilePage from "./pages/InstructorProfilePage";
 import InstructorSearchPage from "./pages/InstructorSearchPage";
 import LoginPage from "./pages/LoginPage";
 import ProviderDashboardPage from "./pages/ProviderDashboardPage";
@@ -43,6 +44,7 @@ function App() {
         {/* Main app routes — wrapped with header and footer */}
         <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
         <Route path="/instructors" element={<MainLayout><InstructorSearchPage /></MainLayout>} />
+        <Route path="/instructors/:instructorId" element={<MainLayout><InstructorProfilePage /></MainLayout>} />
         <Route path="/providers" element={<MainLayout><ProviderListingsPage /></MainLayout>} />
         <Route path="/providers/:providerId" element={<MainLayout><ProviderProfile /></MainLayout>} />
         <Route path="/services" element={<MainLayout><ServicesDashboardPage /></MainLayout>} />
