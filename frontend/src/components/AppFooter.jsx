@@ -55,8 +55,7 @@ function AppFooter() {
           <p className="footer-col-title">Services</p>
           <ul className="footer-col-links">
             <li><Link to="/instructors">Find an Instructor</Link></li>
-            <li><Link to="/services">Browse Services</Link></li>
-            <li><Link to="/register">Join as Provider</Link></li>
+            <li><Link to="/register">Join as an Instructor</Link></li>
             <li><Link to="/login">Sign In</Link></li>
             <li><a href="#">Pricing</a></li>
           </ul>

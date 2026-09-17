@@ -11,10 +11,8 @@ import InstructorSearchPage from "./pages/InstructorSearchPage";
 import LoginPage from "./pages/LoginPage";
 import ProviderDashboardPage from "./pages/ProviderDashboardPage";
 import PrivacyPage from "./pages/PrivacyPage";
-import ProviderListingsPage from "./pages/ProviderListingsPage";
 import ProviderProfile from "./pages/ProviderProfile";
 import RegisterPage from "./pages/RegisterPage";
-import ServicesDashboardPage from "./pages/ServicesDashboardPage";
 import TermsPage from "./pages/TermsPage";
 
 /*
@@ -45,9 +43,9 @@ function App() {
         <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
         <Route path="/instructors" element={<MainLayout><InstructorSearchPage /></MainLayout>} />
         <Route path="/instructors/:instructorId" element={<MainLayout><InstructorProfilePage /></MainLayout>} />
-        <Route path="/providers" element={<MainLayout><ProviderListingsPage /></MainLayout>} />
+        {/* Kept for the Other category, which has no profile of its own yet.
+            Driving instructors live at /instructors/:instructorId. */}
         <Route path="/providers/:providerId" element={<MainLayout><ProviderProfile /></MainLayout>} />
-        <Route path="/services" element={<MainLayout><ServicesDashboardPage /></MainLayout>} />
         <Route path="/booking" element={<MainLayout><BookingPage /></MainLayout>} />
         <Route path="/contact" element={<MainLayout><ContactPage /></MainLayout>} />
         <Route path="/terms" element={<MainLayout><TermsPage /></MainLayout>} />

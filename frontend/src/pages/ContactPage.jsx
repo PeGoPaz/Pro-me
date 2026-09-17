@@ -142,7 +142,7 @@ export default function ContactPage() {
           <details className="contact-faq">
             <summary className="contact-faq-q">How do I book a service?</summary>
             <p className="contact-faq-a">
-              Browse services on the <Link to="/services" className="contact-link">Services</Link> page,
+              Find an instructor on the <Link to="/instructors" className="contact-link">search</Link> page,
               click "Book Appointment", choose a date and confirm.
             </p>
           </details>

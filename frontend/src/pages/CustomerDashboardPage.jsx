@@ -130,7 +130,7 @@ function CustomerDashboardPage() {
         ) : upcoming.length === 0 ? (
           <div className="dash-empty">
             <p>No upcoming appointments.</p>
-            <button className="button button-primary" onClick={() => navigate("/services")}>
+            <button className="button button-primary" onClick={() => navigate("/instructors")}>
               Browse Services
             </button>
           </div>
