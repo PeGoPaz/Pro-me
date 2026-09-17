@@ -4592,3 +4592,312 @@ details[open] .contact-faq-q::after {
 .inst-card-btn:hover {
   background: #1740bd;
 }
+
+/* ── Instructor profile page ──────────────────────────────────────────────
+   Instagram-ish per the roadmap: one large photo, a simple stat row, a photo
+   grid. Mobile-first — the header stacks on a phone and goes horizontal once
+   there is room. */
+.ip-page {
+  width: 100%;
+  /* main is a grid container; grid items default to min-width:auto and will
+     not shrink below their content without this. */
+  min-width: 0;
+  max-width: 54rem;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+}
+
+.ip-state {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 4rem 1rem;
+  text-align: center;
+  color: #666;
+}
+
+.ip-state-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #222;
+}
+
+/* ── header ──────────────────────────────────────────────────────────── */
+.ip-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e6e9f2;
+}
+
+@media (min-width: 42rem) {
+  .ip-header {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1.75rem;
+  }
+}
+
+.ip-avatar {
+  flex: 0 0 auto;
+  width: 6.5rem;
+  height: 6.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #eef2fd;
+  overflow: hidden;
+}
+
+.ip-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ip-avatar-initials {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.ip-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.ip-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.25rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.ip-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.18rem 0.5rem;
+  border-radius: 6px;
+  background: #e7f5ee;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: #197a52;
+}
+
+.ip-headline {
+  margin: 0 0 0.9rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+.ip-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.75rem;
+}
+
+.ip-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.ip-stat-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.ip-stat-value-muted {
+  color: #b9bdc9;
+}
+
+.ip-stat-open {
+  color: #197a52;
+}
+
+.ip-stat-closed {
+  color: #b4693f;
+}
+
+.ip-stat-label {
+  font-size: 0.78rem;
+  color: #888;
+}
+
+.ip-unverified-note {
+  margin: 1rem 0 0;
+  padding: 0.55rem 0.75rem;
+  border-left: 3px solid #d9b02b;
+  border-radius: 0 6px 6px 0;
+  background: #fdf8e8;
+  font-size: 0.83rem;
+  line-height: 1.5;
+  color: #6b5915;
+}
+
+.ip-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+@media (min-width: 42rem) {
+  .ip-actions {
+    align-items: flex-end;
+  }
+}
+
+.ip-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  border: 1.5px solid var(--primary);
+  border-radius: 9px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--primary);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+
+.ip-save-on {
+  background: var(--primary);
+  color: #fff;
+}
+
+.ip-price {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.ip-price-unit {
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: #888;
+}
+
+/* ── sections ────────────────────────────────────────────────────────── */
+.ip-section {
+  padding: 1.5rem 0;
+  border-bottom: 1px solid #f0f2f8;
+}
+
+.ip-section:last-of-type {
+  border-bottom: none;
+}
+
+.ip-section-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.ip-review-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #777;
+}
+
+.ip-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.ip-subtle {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.82rem;
+  color: #999;
+}
+
+.ip-bio {
+  margin: 0;
+  line-height: 1.7;
+  color: #444;
+  white-space: pre-line;
+}
+
+/* ── gallery ─────────────────────────────────────────────────────────── */
+.ip-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ip-gallery-item {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: #f2f4fa;
+  cursor: pointer;
+  /* Square cells, so a mixed set of photos still reads as a tidy grid. */
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+
+.ip-gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.25s;
+}
+
+.ip-gallery-item:hover img {
+  transform: scale(1.04);
+}
+
+.ip-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(12, 15, 26, 0.88);
+  cursor: zoom-out;
+}
+
+.ip-lightbox-img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+/* ── reviews ─────────────────────────────────────────────────────────── */
+.ip-reviews {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
