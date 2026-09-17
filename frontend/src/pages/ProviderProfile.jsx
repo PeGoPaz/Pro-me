@@ -94,7 +94,7 @@ function ProviderProfile() {
     return (
       <section className="provider-public-page">
         <p className="provider-public-empty">{error || "Provider not found."}</p>
-        <Link to="/services" className="button button-primary">Back to services</Link>
+        <Link to="/instructors" className="button button-primary">Find an instructor</Link>
       </section>
     );
   }

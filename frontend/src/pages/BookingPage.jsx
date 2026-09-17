@@ -146,7 +146,7 @@ function BookingPage() {
             <Link to="/dashboard/customer" className="button button-primary">
               View My Bookings
             </Link>
-            <Link to="/services" className="button button-ghost">
+            <Link to="/instructors" className="button button-ghost">
               Browse More Services
             </Link>
           </div>
@@ -172,7 +172,7 @@ function BookingPage() {
       <div className="booking-page">
         <div className="booking-not-found">
           <p>Service not found.</p>
-          <Link to="/services" className="button button-primary">Browse Services</Link>
+          <Link to="/instructors" className="button button-primary">Find an instructor</Link>
         </div>
       </div>
     );
