@@ -54,6 +54,8 @@ const SAMPLE_INSTRUCTORS = [
     licenceCategories: ["B"], transmission: ["automatic", "manual"],
     pricePerLesson: 45, lessonsDone: 4200, verified: true, accepting: true,
     headline: "Patient with nervous beginners",
+    bio: "Fifteen years teaching in north Dublin. I specialise in nervous and\nmature learners, and I will never shout at you at a roundabout.\n\nAutomatic and manual, pick-up anywhere inside the M50.",
+    gallery: 3,
   },
   {
     name: "Cian Murphy", adiNumber: "ADI-20984",
@@ -61,6 +63,8 @@ const SAMPLE_INSTRUCTORS = [
     licenceCategories: ["B", "BE"], transmission: ["manual"],
     pricePerLesson: 40, lessonsDone: 180, verified: false, accepting: true,
     headline: "Evenings and weekends",
+    bio: "Full-time job during the week, so I teach evenings and Saturdays.\nManual only. Happy to do motorway lessons once you are ready.",
+    gallery: 0,
   },
   {
     name: "Niamh Walsh", adiNumber: "ADI-33112",
@@ -68,6 +72,8 @@ const SAMPLE_INSTRUCTORS = [
     licenceCategories: ["B"], transmission: ["automatic"],
     pricePerLesson: 50, lessonsDone: 120, verified: true, accepting: false,
     headline: "Automatic only, Cork city",
+    bio: "Automatic tuition around Cork city and the Wilton test route.\nCurrently full — please check back in a few weeks.",
+    gallery: 2,
   },
   {
     name: "Darragh Kelly", adiNumber: "ADI-44820",
@@ -75,6 +81,8 @@ const SAMPLE_INSTRUCTORS = [
     licenceCategories: ["C", "C1", "D1"], transmission: ["manual"],
     pricePerLesson: 75, lessonsDone: 60, verified: false, accepting: true,
     headline: "Truck and bus categories",
+    bio: "C, C1 and D1 tuition out of Galway. Also do CPC preparation.",
+    gallery: 0,
   },
 ];
 
@@ -101,7 +109,14 @@ for (const sample of SAMPLE_INSTRUCTORS) {
     lessonsDone: sample.lessonsDone,
     acceptingNewStudents: sample.accepting,
     headline: sample.headline,
-    bio: "Sample profile created by the in-memory dev server.",
+    bio: sample.bio,
+    /* Placeholder images, so the gallery grid can be seen working before the
+       real upload pipeline exists. Deterministic seeds keep them stable
+       across restarts. */
+    gallery: Array.from(
+      { length: sample.gallery },
+      (_, i) => `https://picsum.photos/seed/${firstName}${i}/600/600`
+    ),
     isPublished: true,
     profileCompleteness: 85,
     verification: { status: sample.verified ? "verified" : "unverified" },
@@ -135,9 +150,38 @@ for (const sample of SAMPLE_INSTRUCTORS) {
   }
 }
 
+/* One learner with a booking against each instructor who is taking students,
+   so both dashboards and the instructor profile have something to show. */
+const Booking = (await import("../models/Booking.js")).default;
+
+const demoLearner = await User.create({
+  name: "Sample learner",
+  email: "learner@example.com",
+  password: "x".repeat(60),
+  role: "user",
+});
+
+const openInstructors = await InstructorProfile.find({
+  acceptingNewStudents: true,
+}).select("userId");
+
+for (const [index, profile] of openInstructors.entries()) {
+  const when = new Date();
+  when.setDate(when.getDate() + 7 + index);
+
+  await Booking.create({
+    userId: demoLearner._id,
+    instructorId: profile.userId,
+    bookingDate: when,
+    status: index === 0 ? "confirmed" : "pending",
+    confirmedAt: index === 0 ? new Date() : null,
+    notes: "Sample booking created by the in-memory dev server.",
+  });
+}
+
 console.log(
   `\nIn-memory API ready on http://localhost:${process.env.PORT}\n` +
-  `Seeded ${SAMPLE_INSTRUCTORS.length} instructors. Nothing is persisted.\n` +
+  `Seeded ${SAMPLE_INSTRUCTORS.length} instructors and ${openInstructors.length} bookings. Nothing is persisted.\n` +
   `Run the frontend with: npm --prefix ../frontend run dev\n`
 );
 
