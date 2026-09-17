@@ -231,8 +231,16 @@ function InstructorProfilePage() {
           )}
         </div>
 
-        {/* 8 — the action */}
+        {/* 8 — the actions */}
         <div className="ip-actions">
+          {/* Only offered when they are actually taking students; a request
+              that will certainly be declined helps nobody. */}
+          {instructor.acceptingNewStudents && (
+            <Link to={`/booking?instructor=${instructorUserId}`} className="ip-book">
+              Request a lesson
+            </Link>
+          )}
+
           <button
             type="button"
             className={`ip-save ${isSaved ? "ip-save-on" : ""}`}

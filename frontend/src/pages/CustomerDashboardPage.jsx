@@ -18,7 +18,9 @@ const STATUS_LABELS = {
 };
 
 function getProviderId(booking) {
-  const providerRef = booking?.enterpriseId?.userId;
+  /* Bookings now point straight at the instructor, so the provider is right
+     there rather than one hop away through the service listing. */
+  const providerRef = booking?.instructorId;
   if (!providerRef) return "";
   return typeof providerRef === "string" ? providerRef : providerRef._id || "";
 }
@@ -141,10 +143,10 @@ function CustomerDashboardPage() {
                     <p className="dash-booking-service">
                       {getProviderId(b) ? (
                         <Link to={`/providers/${getProviderId(b)}`} className="dash-booking-service-link">
-                          {b.enterpriseId?.subject ?? "Service"}
+                          {b.serviceId?.subject ?? "Driving lesson"}
                         </Link>
                       ) : (
-                        b.enterpriseId?.subject ?? "Service"
+                        b.serviceId?.subject ?? "Driving lesson"
                       )}
                     </p>
                     <p className="dash-booking-date">{formatDate(b.bookingDate)}</p>
@@ -175,10 +177,10 @@ function CustomerDashboardPage() {
                     <p className="dash-booking-service">
                       {getProviderId(b) ? (
                         <Link to={`/providers/${getProviderId(b)}`} className="dash-booking-service-link">
-                          {b.enterpriseId?.subject ?? "Service"}
+                          {b.serviceId?.subject ?? "Driving lesson"}
                         </Link>
                       ) : (
-                        b.enterpriseId?.subject ?? "Service"
+                        b.serviceId?.subject ?? "Driving lesson"
                       )}
                     </p>
                     <p className="dash-booking-date">{formatDate(b.bookingDate)}</p>
