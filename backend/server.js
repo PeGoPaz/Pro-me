@@ -19,9 +19,37 @@ import instructorRoutes from './routes/instructorRoutes.js';
 // app config
 const app = express();
 const port = process.env.PORT || 9000;
+const isProduction = process.env.NODE_ENV === 'production';
 
-// Security: Set security headers
-app.use(helmet());
+/*
+ * Trust the platform's reverse proxy.
+ *
+ * On Render, TLS terminates at a load balancer and Express receives plain http
+ * from the proxy's address. Without this setting:
+ *   - req.secure is false, so express-session refuses to send a Secure cookie
+ *     at all — login silently does nothing in production;
+ *   - every visitor appears to come from the proxy's IP, so the rate limiters
+ *     are shared by the whole site: five logins anywhere would lock everyone
+ *     out of /api/auth for fifteen minutes.
+ * TRUST_PROXY is the number of proxy hops in front of the app (1 on Render).
+ */
+const trustProxy = process.env.TRUST_PROXY ?? (isProduction ? '1' : '0');
+app.set('trust proxy', /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy);
+
+// Security: Set security headers.
+// Helmet's default CSP only allows images from our own origin and data: URLs.
+// Instructor photos and galleries are external https URLs (Cloudinary, once
+// uploads exist), so img-src is widened to https: — everything else stays at
+// Helmet's defaults.
+app.use(
+    helmet({
+        contentSecurityPolicy: {
+            directives: {
+                'img-src': ["'self'", 'data:', 'https:'],
+            },
+        },
+    })
+);
 
 // Security: CORS configuration - restrict to specific origin in production
 const allowedOrigins = process.env.CLIENT_ORIGIN 
@@ -49,15 +77,20 @@ app.use(
     })
 );
 
-// Security: Rate limiting - general
+/*
+ * Rate limiting — API only, so static files never count against it.
+ * 300 per 15 minutes rather than 100, because Irish mobile carriers put many
+ * subscribers behind one address (CGNAT), and a limit sized for one person
+ * would be shared by strangers.
+ */
 const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    max: 300,
     message: { message: 'Too many requests, please try again later.' },
     standardHeaders: true,
     legacyHeaders: false,
 });
-app.use(generalLimiter);
+app.use('/api', generalLimiter);
 
 // Security: Stricter rate limiting for auth endpoints
 const authLimiter = rateLimit({
