@@ -3443,7 +3443,7 @@ details[open] .contact-faq-q::after {
 /* Responsive */
 @media (max-width: 900px) {
   .contact-info-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .contact-split {
@@ -3918,7 +3918,7 @@ details[open] .contact-faq-q::after {
 
 @media (min-width: 44rem) {
   .inst-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -4575,4 +4575,324 @@ details[open] .contact-faq-q::after {
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.6rem;
+}
+
+/* ── Instructor onboarding wizard ──────────────────────────────────────────
+   Most instructors will fill this in on a phone, so everything is one column
+   and every control is thumb-sized. */
+.ob-page {
+  width: 100%;
+  min-width: 0;
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.ob-progress {
+  display: flex;
+  gap: 0.35rem;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+.ob-progress-step {
+  flex: 1;
+  min-width: 0;
+}
+
+.ob-progress-step button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ob-progress-step button:disabled {
+  cursor: default;
+}
+
+.ob-progress-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  border: 2px solid #dfe4f2;
+  background: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #9aa0b0;
+}
+
+.ob-progress-step.is-done .ob-progress-num {
+  border-color: var(--primary);
+  background: #eef2fd;
+  color: var(--primary);
+}
+
+.ob-progress-step.is-current .ob-progress-num {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+
+.ob-progress-label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  color: #888;
+}
+
+/* On a phone, five labels do not fit; the numbers carry the progress. */
+@media (max-width: 34rem) {
+  .ob-progress-label {
+    display: none;
+  }
+  .ob-progress-step.is-current .ob-progress-label {
+    display: none;
+  }
+}
+
+.ob-card {
+  padding: 1.5rem 1.25rem;
+  border: 1px solid #e6e9f2;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.ob-step-count {
+  margin: 0 0 0.2rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9aa0b0;
+}
+
+.ob-title {
+  margin: 0 0 0.3rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.ob-intro {
+  margin: 0 0 1.25rem;
+  color: #666;
+}
+
+.ob-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+.ob-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.ob-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #222;
+}
+
+.ob-help {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #888;
+}
+
+.ob-field input[type="text"],
+.ob-field input[type="tel"],
+.ob-field input[type="number"],
+.ob-field textarea {
+  width: 100%;
+  padding: 0.7rem 0.75rem;
+  border: 1.5px solid #dfe4f2;
+  border-radius: 9px;
+  background: #fff;
+  font: inherit;
+  /* 16px stops iOS Safari zooming into the field on focus. */
+  font-size: 1rem;
+  color: #222;
+}
+
+.ob-field input:disabled {
+  background: #f6f7fb;
+  color: #777;
+}
+
+.ob-field input:focus,
+.ob-field textarea:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+.ob-field textarea {
+  resize: vertical;
+}
+
+.ob-photo-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.ob-photo-row .ob-help {
+  flex: 1 1 14rem;
+  margin: 0;
+}
+
+.ob-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.ob-chip {
+  padding: 0.5rem 0.8rem;
+  border: 1.5px solid #dfe4f2;
+  border-radius: 999px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.88rem;
+  color: #444;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.ob-chip-on {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+
+.ob-subgroup {
+  margin-top: 0.5rem;
+}
+
+.ob-subgroup-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #666;
+}
+
+.ob-check {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #333;
+}
+
+.ob-check input {
+  flex: 0 0 auto;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.15rem;
+  accent-color: var(--primary);
+}
+
+.ob-summary {
+  margin: 0;
+  border: 1px solid #eef0f6;
+  border-radius: 10px;
+}
+
+.ob-summary-row {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr auto;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid #f1f3f8;
+}
+
+.ob-summary-row:last-child {
+  border-bottom: none;
+}
+
+.ob-summary-row dt {
+  font-size: 0.82rem;
+  color: #888;
+}
+
+.ob-summary-row dd {
+  min-width: 0;
+  margin: 0;
+  font-size: 0.9rem;
+  color: #222;
+  overflow-wrap: anywhere;
+}
+
+.ob-edit {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--primary);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+@media (max-width: 34rem) {
+  .ob-summary-row {
+    grid-template-columns: 1fr auto;
+  }
+  .ob-summary-row dt {
+    grid-column: 1 / -1;
+  }
+}
+
+.ob-blockers {
+  padding: 0.8rem 1rem;
+  border-left: 3px solid #d9b02b;
+  border-radius: 0 8px 8px 0;
+  background: #fdf8e8;
+  font-size: 0.88rem;
+  color: #6b5915;
+}
+
+.ob-blockers p {
+  margin: 0 0 0.35rem;
+  font-weight: 600;
+}
+
+.ob-blockers ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.ob-live {
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  background: #e7f5ee;
+  font-size: 0.9rem;
+  color: #19573c;
+}
+
+.ob-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.75rem;
 }

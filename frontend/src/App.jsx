@@ -6,6 +6,7 @@ import BookingPage from "./pages/BookingPage";
 import ContactPage from "./pages/ContactPage";
 import CustomerDashboardPage from "./pages/CustomerDashboardPage";
 import HomePage from "./pages/HomePage";
+import InstructorOnboardingPage from "./pages/InstructorOnboardingPage";
 import InstructorProfilePage from "./pages/InstructorProfilePage";
 import InstructorSearchPage from "./pages/InstructorSearchPage";
 import LoginPage from "./pages/LoginPage";
@@ -42,6 +43,7 @@ function App() {
         {/* Main app routes — wrapped with header and footer */}
         <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
         <Route path="/instructors" element={<MainLayout><InstructorSearchPage /></MainLayout>} />
+        <Route path="/onboarding" element={<MainLayout><InstructorOnboardingPage /></MainLayout>} />
         <Route path="/instructors/:instructorId" element={<MainLayout><InstructorProfilePage /></MainLayout>} />
         {/* Kept for the Other category, which has no profile of its own yet.
             Driving instructors live at /instructors/:instructorId. */}
