@@ -13,8 +13,11 @@ import {
 } from "../data/licenceCategories.js";
 import {
   clampLessonsDone,
+  isHttpsUrl,
   isProfileVisible,
+  normaliseIrishPhone,
   profileCompleteness,
+  publishBlockers,
 } from "../utils/instructorRules.js";
 import {
   toOwnerProfile,
@@ -172,7 +175,11 @@ router.get("/:id", async (req, res, next) => {
     const stats = await reviewStatsFor(instructorUserId);
 
     return res.json(
-      toPublicProfile(profile, { user: profile.userId, ...stats })
+      toPublicProfile(profile, {
+        user: profile.userId,
+        ...stats,
+        includeContact: Boolean(req.session?.user),
+      })
     );
   } catch (error) {
     console.error("Instructor fetch error:", error.message);
@@ -208,7 +215,7 @@ router.put("/me", async (req, res) => {
   try {
     const userId = req.session.user.id;
 
-    const user = await User.findById(userId).select("role providerType");
+    const user = await User.findById(userId).select("role providerType avatarUrl");
     if (!user || user.providerType !== "driving_instructor") {
       return res.status(403).json({
         message: "Only driving instructor accounts can have an instructor profile",
@@ -220,7 +227,7 @@ router.put("/me", async (req, res) => {
     const {
       adiNumber, counties, testCentres, licenceCategories, transmission,
       headline, bio, profilePhotoUrl, gallery, pricePerLesson,
-      lessonsDone, acceptingNewStudents, isPublished,
+      lessonsDone, acceptingNewStudents, isPublished, phone, declarations,
     } = req.body;
 
     /* The ADI number is required on first save. Account creation stays
@@ -251,6 +258,33 @@ router.put("/me", async (req, res) => {
       }
     }
 
+    /* Stored in one canonical form however it was typed. An empty string
+       clears it; anything else must be a real Irish number. */
+    let resolvedPhone;
+    if (phone !== undefined) {
+      if (phone === "" || phone === null) {
+        resolvedPhone = "";
+      } else {
+        resolvedPhone = normaliseIrishPhone(phone);
+        if (!resolvedPhone) {
+          return res.status(400).json({
+            message: "Enter an Irish phone number, e.g. 087 123 4567",
+          });
+        }
+      }
+    }
+
+    /* Images are URLs until the upload pipeline exists, and these end up in
+       an <img src> on a public page. Only https, nothing else. */
+    if (profilePhotoUrl !== undefined && profilePhotoUrl !== "" && !isHttpsUrl(profilePhotoUrl)) {
+      return res.status(400).json({ message: "profilePhotoUrl must be an https URL" });
+    }
+    if (gallery !== undefined) {
+      if (!Array.isArray(gallery) || gallery.length > 12 || !gallery.every(isHttpsUrl)) {
+        return res.status(400).json({ message: "gallery must be up to 12 https URLs" });
+      }
+    }
+
     const updates = {
       adiNumber: resolvedAdi,
       ...(checks[0].value !== undefined ? { counties: checks[0].value } : {}),
@@ -266,7 +300,31 @@ router.put("/me", async (req, res) => {
         ? { acceptingNewStudents: Boolean(acceptingNewStudents) }
         : {}),
       ...(isPublished !== undefined ? { isPublished: Boolean(isPublished) } : {}),
+      ...(resolvedPhone !== undefined ? { phone: resolvedPhone } : {}),
     };
+
+    /* Each declaration is recorded with the moment it was given. Re-ticking an
+       already confirmed box keeps the original date; unticking clears it.
+       Dotted paths, so one declaration never overwrites the other. */
+    const nextDeclarations = {
+      adiConfirmedAt: existing?.declarations?.adiConfirmedAt ?? null,
+      holdsInsuranceAt: existing?.declarations?.holdsInsuranceAt ?? null,
+    };
+    if (declarations && typeof declarations === "object") {
+      const now = new Date();
+      if (declarations.adiConfirmed !== undefined) {
+        nextDeclarations.adiConfirmedAt = declarations.adiConfirmed
+          ? nextDeclarations.adiConfirmedAt ?? now
+          : null;
+        updates["declarations.adiConfirmedAt"] = nextDeclarations.adiConfirmedAt;
+      }
+      if (declarations.holdsInsurance !== undefined) {
+        nextDeclarations.holdsInsuranceAt = declarations.holdsInsurance
+          ? nextDeclarations.holdsInsuranceAt ?? now
+          : null;
+        updates["declarations.holdsInsuranceAt"] = nextDeclarations.holdsInsuranceAt;
+      }
+    }
 
     /* Self-reported and gameable, so it is clamped to what this profile's
        verification status permits rather than stored as claimed. Note that
@@ -278,9 +336,30 @@ router.put("/me", async (req, res) => {
     }
 
     /* Completeness is derived from the merged result, never trusted from
-       the client, because it feeds search ranking. */
-    const merged = { ...(existing?.toObject() ?? {}), ...updates };
-    updates.profileCompleteness = profileCompleteness(merged);
+       the client, because it feeds search ranking. The account avatar counts
+       as the profile photo, which is what the public profile falls back to. */
+    const merged = {
+      ...(existing?.toObject() ?? {}),
+      ...updates,
+      declarations: nextDeclarations,
+    };
+    updates.profileCompleteness = profileCompleteness({
+      ...merged,
+      profilePhotoUrl: merged.profilePhotoUrl || user.avatarUrl || "",
+    });
+
+    /* A listed profile must meet the minimum, whether this request is the one
+       publishing it or an edit to one that is already live. Otherwise an
+       instructor could publish properly, then quietly withdraw a declaration. */
+    if (merged.isPublished) {
+      const blockers = publishBlockers({ ...merged, adiNumber: resolvedAdi });
+      if (blockers.length) {
+        return res.status(400).json({
+          message: "Your profile is not ready to be listed yet",
+          blockers,
+        });
+      }
+    }
 
     /* First save starts the 3-month free trial clock. Stripe card
        verification is the Phase 2 piece; the dates exist from day one. */

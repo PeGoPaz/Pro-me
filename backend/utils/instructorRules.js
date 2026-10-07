@@ -108,3 +108,81 @@ export const profileCompleteness = (profile = {}) => {
   }
   return Math.min(score, 100);
 };
+
+/* ── Contact phone ────────────────────────────────────────────────────────
+   Instructors type numbers every way imaginable: "087 123 4567",
+   "+353 87 123 4567", "+353 (0)87-1234567", "00353871234567". All of those
+   are the same number, so store one canonical E.164 form (+353871234567) and
+   reject anything that is not an Irish number. Returns null when invalid. */
+export const normaliseIrishPhone = (input) => {
+  if (typeof input !== "string") return null;
+
+  let digits = input.replace(/[\s\-().]/g, "");
+  if (!digits) return null;
+
+  if (digits.startsWith("00353")) digits = `+353${digits.slice(5)}`;
+
+  let national;
+  if (digits.startsWith("+353")) {
+    /* "+353 (0)87…" is a common habit; the 0 does not belong after +353. */
+    national = digits.slice(4).replace(/^0/, "");
+  } else if (digits.startsWith("0")) {
+    national = digits.slice(1);
+  } else {
+    return null;
+  }
+
+  /* Mobiles are 9 digits after the 0 (87 123 4567); landlines 7–9
+     (Dublin 1 234 5678). Nothing in Ireland starts with 0 after the prefix. */
+  if (!/^[1-9]\d{6,8}$/.test(national)) return null;
+
+  return `+353${national}`;
+};
+
+/* ── Publishing ───────────────────────────────────────────────────────────
+   What a profile must have before it can be listed publicly. Returns
+   human-readable reasons, empty when the profile is ready.
+
+   The declarations are not paperwork for its own sake. Teaching for reward
+   without an ADI permit is a criminal offence, and the roadmap requires every
+   instructor to confirm they hold insurance covering paid tuition — the
+   platform introduces, the instructor is responsible for the lesson. A
+   timestamped confirmation is the evidence that they did. */
+const CAR_CATEGORIES = ["B", "BE"];
+
+export const publishBlockers = (profile = {}) => {
+  const blockers = [];
+
+  if (!profile.adiNumber) blockers.push("Add your RSA ADI number");
+  if (!profile.phone) blockers.push("Add a contact phone number");
+  if (!profile.counties?.length) blockers.push("Choose at least one county you cover");
+  if (!profile.licenceCategories?.length) blockers.push("Choose at least one licence category you teach");
+
+  /* Transmission is its own axis, and for a car instructor it is the first
+     thing a learner filters on. */
+  const teachesCars = (profile.licenceCategories ?? []).some((c) => CAR_CATEGORIES.includes(c));
+  if (teachesCars && !profile.transmission?.length) {
+    blockers.push("Say whether you teach automatic, manual or both");
+  }
+
+  if (!profile.declarations?.adiConfirmedAt) {
+    blockers.push("Confirm that you hold a current ADI permit");
+  }
+  if (!profile.declarations?.holdsInsuranceAt) {
+    blockers.push("Confirm that you hold insurance covering paid instruction");
+  }
+
+  return blockers;
+};
+
+/* Only https URLs may be stored as images. Until uploads exist these are
+   typed or pasted, and nothing else — data:, javascript:, plain http — has any
+   business in an <img src> on someone else's profile. */
+export const isHttpsUrl = (value) => {
+  if (typeof value !== "string") return false;
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
+};

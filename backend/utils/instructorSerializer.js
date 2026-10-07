@@ -10,7 +10,10 @@ import { isLessonsDoneCorroborated } from "./instructorRules.js";
 /* What anyone browsing the site may see.
    Deliberately absent: verification.note (admin-only) and every subscription
    field (the instructor's billing is nobody else's business). */
-export const toPublicProfile = (profile, { user, reviewCount = 0, averageRating = null, completedBookings = 0 } = {}) => {
+export const toPublicProfile = (
+  profile,
+  { user, reviewCount = 0, averageRating = null, completedBookings = 0, includeContact = false } = {}
+) => {
   if (!profile) return null;
 
   const verificationStatus = profile.verification?.status ?? "unverified";
@@ -50,6 +53,11 @@ export const toPublicProfile = (profile, { user, reviewCount = 0, averageRating 
     averageRating,
     profileCompleteness: profile.profileCompleteness ?? 0,
     memberSince: profile.createdAt ?? null,
+
+    /* Contact details only for signed-in visitors. A public directory of
+       individuals' mobile numbers is a gift to scrapers, and an account is
+       a small ask of a learner who actually intends to book. */
+    ...(includeContact ? { phone: profile.phone || "" } : {}),
   };
 };
 
@@ -59,8 +67,12 @@ export const toOwnerProfile = (profile, extras = {}) => {
   if (!profile) return null;
 
   return {
-    ...toPublicProfile(profile, extras),
+    ...toPublicProfile(profile, { ...extras, includeContact: true }),
     adiNumber: profile.adiNumber ?? "",
+    declarations: {
+      adiConfirmedAt: profile.declarations?.adiConfirmedAt ?? null,
+      holdsInsuranceAt: profile.declarations?.holdsInsuranceAt ?? null,
+    },
     isPublished: profile.isPublished ?? false,
     verification: {
       status: profile.verification?.status ?? "unverified",

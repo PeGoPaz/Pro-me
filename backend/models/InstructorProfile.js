@@ -112,6 +112,20 @@ const instructorProfileSchema = new mongoose.Schema(
     /* Recomputed on every write; feeds the trust-first default ranking. */
     profileCompleteness: { type: Number, min: 0, max: 100, default: 0 },
 
+    /* Canonical E.164 (+353871234567), whatever format it was typed in.
+       Shown on the public profile to signed-in visitors only, so the
+       directory cannot be scraped for phone numbers anonymously. */
+    phone: { type: String, trim: true, default: "" },
+
+    /* When the instructor confirmed each statement in the onboarding wizard.
+       A timestamp rather than a boolean, because the point is evidence: the
+       roadmap requires instructors to confirm they hold an ADI permit and
+       insurance covering paid tuition, and the terms rest on that. */
+    declarations: {
+      adiConfirmedAt: { type: Date, default: null },
+      holdsInsuranceAt: { type: Date, default: null },
+    },
+
     /* ADI verification against the RSA public register.
        Accounts are created immediately with no human gate — with no network
        effect yet, instructors will not wait on a manual review. New profiles

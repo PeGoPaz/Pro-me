@@ -158,3 +158,86 @@ test("partial profiles land between the two", () => {
 });
 
 console.log(`instructorRules: ${passed} assertions passed`);
+
+/* ── phone, publishing, image URLs (onboarding wizard) ─────────────────── */
+import { isHttpsUrl, normaliseIrishPhone, publishBlockers } from "../utils/instructorRules.js";
+
+let passedOnboarding = 0;
+const check = (name, fn) => {
+  try {
+    fn();
+    passedOnboarding += 1;
+  } catch (error) {
+    console.error(`FAIL  ${name}\n      ${error.message}`);
+    process.exitCode = 1;
+  }
+};
+
+check("Irish mobile numbers in every common format normalise to one form", () => {
+  for (const input of [
+    "087 123 4567",
+    "0871234567",
+    "+353 87 123 4567",
+    "+353 (0)87-1234567",
+    "00353871234567",
+    "087-123-4567",
+  ]) {
+    assert.equal(normaliseIrishPhone(input), "+353871234567", input);
+  }
+});
+
+check("a Dublin landline is accepted", () => {
+  assert.equal(normaliseIrishPhone("01 234 5678"), "+35312345678");
+});
+
+check("non-Irish and malformed numbers are rejected", () => {
+  for (const input of ["+44 7700 900123", "12345", "087 123", "", "phone me", null, "0"]) {
+    assert.equal(normaliseIrishPhone(input), null, String(input));
+  }
+});
+
+const ready = {
+  adiNumber: "ADI-1",
+  phone: "+353871234567",
+  counties: ["dublin"],
+  licenceCategories: ["B"],
+  transmission: ["manual"],
+  declarations: { adiConfirmedAt: new Date(), holdsInsuranceAt: new Date() },
+};
+
+check("a complete profile has no publishing blockers", () => {
+  assert.deepEqual(publishBlockers(ready), []);
+});
+
+check("an empty profile lists every blocker", () => {
+  assert.equal(publishBlockers({}).length, 6);
+});
+
+check("both declarations are required, separately", () => {
+  const noInsurance = { ...ready, declarations: { adiConfirmedAt: new Date() } };
+  assert.deepEqual(publishBlockers(noInsurance), [
+    "Confirm that you hold insurance covering paid instruction",
+  ]);
+});
+
+check("a car instructor must state transmission", () => {
+  assert.deepEqual(publishBlockers({ ...ready, transmission: [] }), [
+    "Say whether you teach automatic, manual or both",
+  ]);
+});
+
+check("a truck-only instructor does not need a transmission", () => {
+  assert.deepEqual(
+    publishBlockers({ ...ready, licenceCategories: ["C"], transmission: [] }),
+    []
+  );
+});
+
+check("only https URLs count as images", () => {
+  assert.equal(isHttpsUrl("https://res.cloudinary.com/x.jpg"), true);
+  for (const bad of ["http://example.com/x.jpg", "javascript:alert(1)", "data:image/png;base64,AA", "not a url", ""]) {
+    assert.equal(isHttpsUrl(bad), false, bad);
+  }
+});
+
+console.log(`onboarding rules: ${passedOnboarding} assertions passed`);
