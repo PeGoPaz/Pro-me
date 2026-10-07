@@ -234,6 +234,24 @@ export function StepAbout({ draft, setField }) {
         </span>
       </label>
 
+      <label className="ob-field">
+        <span className="ob-label">Lessons taught so far <span className="ob-help">(optional)</span></span>
+        <input
+          type="number"
+          min="0"
+          step="1"
+          inputMode="numeric"
+          value={draft.lessonsDone}
+          onChange={(e) => setField("lessonsDone", e.target.value)}
+          placeholder="e.g. 1200"
+        />
+        <span className="ob-help">
+          Shown as self-reported until bookings and reviews here back it up.
+          Until your ADI number is verified, very large figures are reduced to
+          a lower cap — it rises once you are verified.
+        </span>
+      </label>
+
       <label className="ob-field ob-check">
         <input
           type="checkbox"
@@ -264,6 +282,7 @@ export function StepReview({ draft, setField, reference, user, onEdit, blockers,
     },
     { step: 3, label: "Headline", value: draft.headline || "—" },
     { step: 3, label: "Price", value: draft.pricePerLesson !== "" ? `€${draft.pricePerLesson}` : "—" },
+    { step: 3, label: "Lessons taught", value: draft.lessonsDone ? `${draft.lessonsDone} (self-reported)` : "—" },
   ];
 
   return (

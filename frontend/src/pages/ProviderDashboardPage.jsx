@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/index.js";
 import { resizePhotoToDataUrl } from "../utils/avatarImage";
+import InstructorProfileCard from "../components/InstructorProfileCard";
 import { getCategoryImage } from "../utils/categoryImages";
 import { formatDate } from "../utils/formatDate";
 import ActivityHeatmap from "../components/ActivityHeatmap";
@@ -208,6 +209,9 @@ function ProviderDashboardPage() {
 
   return (
     <div className="dash-page">
+      {/* Driving instructors manage their public profile from here. */}
+      {user.providerType === "driving_instructor" && <InstructorProfileCard />}
+
       {/* Profile card */}
       <section className="dash-profile-card">
         <DashboardAvatar
@@ -221,7 +225,9 @@ function ProviderDashboardPage() {
         <div className="dash-profile-info">
           <h1 className="dash-profile-name">{user.name}</h1>
           <p className="dash-profile-email">{user.email}</p>
-          <span className="dash-role-badge dash-role-badge-provider">Service Provider</span>
+          <span className="dash-role-badge dash-role-badge-provider">
+            {user.providerType === "driving_instructor" ? "Driving Instructor" : "Service Provider"}
+          </span>
         </div>
         <div className="dash-profile-meta">
           <div className="dash-meta-item">

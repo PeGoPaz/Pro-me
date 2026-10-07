@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import api from "../api/index.js";
 
 function LoginPage() {
   const { login } = useAuth();
@@ -32,6 +33,16 @@ function LoginPage() {
       const user = await login(form.email, form.password);
       /* Route based on role returned from the API */
       if (user.role === "enterprise") {
+        /* A driving instructor who has not published yet goes straight to
+           setup — otherwise a new instructor lands on a dashboard with nothing
+           on it and no obvious next step. */
+        if (user.providerType === "driving_instructor") {
+          const res = await api.get("/instructors/me").catch(() => null);
+          if (!res?.data?.profile?.isPublished) {
+            navigate("/onboarding");
+            return;
+          }
+        }
         navigate("/dashboard/provider");
       } else {
         navigate("/dashboard/customer");

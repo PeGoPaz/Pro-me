@@ -43,6 +43,7 @@ const EMPTY_DRAFT = {
   headline: "",
   bio: "",
   pricePerLesson: "",
+  lessonsDone: "",
   acceptingNewStudents: true,
   declarations: { adiConfirmed: false, holdsInsurance: false },
   isPublished: false,
@@ -59,6 +60,7 @@ const toDraft = (profile) => ({
   headline: profile.headline ?? "",
   bio: profile.bio ?? "",
   pricePerLesson: profile.pricePerLesson ?? "",
+  lessonsDone: profile.lessonsDone ? String(profile.lessonsDone) : "",
   acceptingNewStudents: profile.acceptingNewStudents ?? true,
   declarations: {
     adiConfirmed: Boolean(profile.declarations?.adiConfirmedAt),
@@ -93,6 +95,9 @@ const payloadFor = (stepKey, draft) => {
         headline: draft.headline,
         bio: draft.bio,
         pricePerLesson: draft.pricePerLesson === "" ? null : Number(draft.pricePerLesson),
+        /* The server clamps this to what the verification status allows and
+           sends the stored figure back, so the field shows the real value. */
+        lessonsDone: draft.lessonsDone === "" ? 0 : Number(draft.lessonsDone),
         acceptingNewStudents: draft.acceptingNewStudents,
       };
     default:
@@ -110,6 +115,9 @@ const clientCheck = (stepKey, draft) => {
   if (stepKey === "teaching" && !draft.licenceCategories.length) return "Choose at least one licence category.";
   if (stepKey === "about" && draft.pricePerLesson !== "" && Number(draft.pricePerLesson) < 0) {
     return "Price cannot be negative.";
+  }
+  if (stepKey === "about" && draft.lessonsDone !== "" && Number(draft.lessonsDone) < 0) {
+    return "Lessons taught cannot be negative.";
   }
   return "";
 };

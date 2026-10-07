@@ -4903,3 +4903,123 @@ details[open] .contact-faq-q::after {
   gap: 0.6rem;
   margin-top: 1.75rem;
 }
+
+/* ── Instructor profile card (provider dashboard) ───────────────────────── */
+.ipc {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 1.15rem 1.25rem;
+  border: 1px solid #dfe6fb;
+  border-radius: 14px;
+  background: #f7f9ff;
+}
+
+.ipc-empty {
+  border-color: var(--primary);
+  background: #eef2fd;
+}
+
+.ipc-main {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+
+.ipc-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.ipc-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.ipc-status {
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.ipc-status-live {
+  background: #e7f5ee;
+  color: #197a52;
+}
+
+.ipc-status-draft {
+  background: #f1f2f6;
+  color: #666;
+}
+
+.ipc-status-pending {
+  background: #fdf3dc;
+  color: #8a6512;
+}
+
+.ipc-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.ipc-progress-bar {
+  flex: 1;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: #e2e7f5;
+  overflow: hidden;
+}
+
+.ipc-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--primary);
+  transition: width 0.4s ease;
+}
+
+.ipc-progress-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #444;
+  white-space: nowrap;
+}
+
+.ipc-copy {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #555;
+}
+
+.ipc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Contact block on the public instructor profile */
+.ip-contact {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.ip-contact-locked {
+  font-size: 0.85rem;
+  color: #888;
+}

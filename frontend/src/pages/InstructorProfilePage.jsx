@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { StarDisplay, StarPicker } from "../components/StarRating";
 import ReviewCard from "../components/ReviewCard";
 import ReportDialog from "../components/ReportDialog";
+import { formatIrishPhone } from "../utils/formatPhone";
 
 /*
  * The public instructor profile.
@@ -81,6 +82,10 @@ function InstructorProfilePage() {
   }, [instructorUserId]);
 
   const isLearner = user?.role === "user";
+  /* Booking and saving are learner actions. A signed-out visitor still sees
+     them (they lead to sign-in); an instructor — including this one, looking
+     at their own page — does not, because the server would refuse both. */
+  const canActAsLearner = !user || isLearner;
 
   useEffect(() => {
     if (!isLearner || !instructorUserId) return undefined;
@@ -241,13 +246,14 @@ function InstructorProfilePage() {
               )}
             </div>
 
-            <div className="ip-stat">
-              <span className="ip-stat-value">{instructor.lessonsDone ?? 0}</span>
+            {/* "0 lessons" says nothing useful and reads badly; omit it. */}
+            {instructor.lessonsDone > 0 && <div className="ip-stat">
+              <span className="ip-stat-value">{instructor.lessonsDone}</span>
               {/* Never let this read as a verified figure. */}
               <span className="ip-stat-label">
                 lessons{instructor.lessonsDoneIsSelfReported && " (self-reported)"}
               </span>
-            </div>
+            </div>}
 
             <div className="ip-stat">
               <span className={`ip-stat-value ${instructor.acceptingNewStudents ? "ip-stat-open" : "ip-stat-closed"}`}>
@@ -273,13 +279,13 @@ function InstructorProfilePage() {
         <div className="ip-actions">
           {/* Only offered when they are actually taking students; a request
               that will certainly be declined helps nobody. */}
-          {instructor.acceptingNewStudents && (
+          {canActAsLearner && instructor.acceptingNewStudents && (
             <Link to={`/booking?instructor=${instructorUserId}`} className="ip-book">
               Request a lesson
             </Link>
           )}
 
-          <button
+          {canActAsLearner && <button
             type="button"
             className={`ip-save ${isSaved ? "ip-save-on" : ""}`}
             onClick={toggleSave}
@@ -291,7 +297,27 @@ function InstructorProfilePage() {
                 stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
             </svg>
             {isSaved ? "Saved" : "Save"}
-          </button>
+          </button>}
+
+          {/* The API only returns the number to signed-in visitors. */}
+          {instructor.phone ? (
+            <a href={`tel:${instructor.phone}`} className="ip-contact">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2"
+                  stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+              </svg>
+              {formatIrishPhone(instructor.phone)}
+            </a>
+          ) : !user ? (
+            <p className="ip-contact-locked">
+              <Link to="/login" className="legal-link">Sign in</Link> to see their phone number
+            </p>
+          ) : null}
+
+          {/* The instructor looking at their own public page. */}
+          {String(user?._id ?? user?.id) === instructorUserId && (
+            <Link to="/onboarding" className="button button-ghost">Edit my profile</Link>
+          )}
 
           {instructor.pricePerLesson !== null && instructor.pricePerLesson !== undefined && (
             <p className="ip-price">
