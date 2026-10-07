@@ -5023,3 +5023,162 @@ details[open] .contact-faq-q::after {
   font-size: 0.85rem;
   color: #888;
 }
+
+/* ── Admin queues ───────────────────────────────────────────────────────── */
+.adm-page {
+  width: 100%;
+  min-width: 0;
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+}
+
+.adm-title {
+  margin: 0 0 1rem;
+  font-size: 1.7rem;
+  font-weight: 700;
+}
+
+.adm-tabs {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 1.25rem;
+  padding: 0.3rem;
+  border-radius: 12px;
+  background: #f0f3fb;
+}
+
+.adm-tab {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #777;
+  cursor: pointer;
+}
+
+.adm-tab-active {
+  background: #fff;
+  color: var(--primary);
+  box-shadow: 0 1px 4px rgba(20, 30, 70, 0.08);
+}
+
+.adm-intro {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #555;
+}
+
+.adm-empty {
+  padding: 2rem 0;
+  color: #888;
+}
+
+.adm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.adm-item {
+  padding: 1.1rem;
+  border: 1px solid #e6e9f2;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.adm-item-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.adm-item-title {
+  margin: 0;
+  font-weight: 700;
+}
+
+.adm-item-meta {
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  color: #888;
+  overflow-wrap: anywhere;
+}
+
+.adm-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.6rem 1rem;
+  margin: 0 0 0.85rem;
+}
+
+.adm-facts dt {
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.adm-facts dd {
+  margin: 0.1rem 0 0;
+  font-size: 0.9rem;
+  color: #222;
+}
+
+.adm-adi {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 600;
+}
+
+.adm-details {
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-left: 3px solid #dfe4f2;
+  font-size: 0.9rem;
+  font-style: italic;
+  color: #555;
+}
+
+.adm-note {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1.5px solid #dfe4f2;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.adm-note:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+.adm-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.adm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.adm-reject {
+  border-color: #e7b5c0;
+  color: #b23a55;
+}

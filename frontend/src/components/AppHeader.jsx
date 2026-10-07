@@ -70,8 +70,9 @@ function AppHeader() {
   /* Backend roles: "user" = customer, "enterprise" = provider */
   const isCustomer = user?.role === "user";
   const isProvider = user?.role === "enterprise";
-  const profilePath = isProvider ? "/dashboard/provider" : "/dashboard/customer";
-  const roleLabel = isProvider ? "Provider" : "Customer";
+  const isAdmin = user?.role === "admin";
+  const profilePath = isAdmin ? "/admin" : isProvider ? "/dashboard/provider" : "/dashboard/customer";
+  const roleLabel = isAdmin ? "Admin" : isProvider ? "Provider" : "Customer";
 
   /* First name only for display */
   const displayName = user?.name?.split(" ")[0] ?? roleLabel;
@@ -98,6 +99,12 @@ function AppHeader() {
         {isProvider && (
           <NavLink to="/dashboard/provider" className={({ isActive }) => "nav-link" + (isActive ? " nav-link-active" : "")}>
             Dashboard
+          </NavLink>
+        )}
+
+        {isAdmin && (
+          <NavLink to="/admin" className={({ isActive }) => "nav-link" + (isActive ? " nav-link-active" : "")}>
+            Admin
           </NavLink>
         )}
 
@@ -193,6 +200,9 @@ function AppHeader() {
           )}
           {isProvider && (
             <NavLink to="/dashboard/provider" className="mobile-nav-link" onClick={close}>Dashboard</NavLink>
+          )}
+          {isAdmin && (
+            <NavLink to="/admin" className="mobile-nav-link" onClick={close}>Admin</NavLink>
           )}
           {!user && !loading && (
             <NavLink to="/register" className="mobile-nav-link" onClick={close}>For Providers</NavLink>

@@ -32,6 +32,10 @@ function LoginPage() {
       setLoading(true);
       const user = await login(form.email, form.password);
       /* Route based on role returned from the API */
+      if (user.role === "admin") {
+        navigate("/admin");
+        return;
+      }
       if (user.role === "enterprise") {
         /* A driving instructor who has not published yet goes straight to
            setup — otherwise a new instructor lands on a dashboard with nothing

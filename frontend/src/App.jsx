@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import AppFooter from "./components/AppFooter";
 import AppHeader from "./components/AppHeader";
+import AdminPage from "./pages/AdminPage";
 import BookingPage from "./pages/BookingPage";
 import ContactPage from "./pages/ContactPage";
 import CustomerDashboardPage from "./pages/CustomerDashboardPage";
@@ -44,6 +45,7 @@ function App() {
         <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
         <Route path="/instructors" element={<MainLayout><InstructorSearchPage /></MainLayout>} />
         <Route path="/onboarding" element={<MainLayout><InstructorOnboardingPage /></MainLayout>} />
+        <Route path="/admin" element={<MainLayout><AdminPage /></MainLayout>} />
         <Route path="/instructors/:instructorId" element={<MainLayout><InstructorProfilePage /></MainLayout>} />
         {/* Kept for the Other category, which has no profile of its own yet.
             Driving instructors live at /instructors/:instructorId. */}
