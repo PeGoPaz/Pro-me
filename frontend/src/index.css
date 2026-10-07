@@ -2053,8 +2053,11 @@ h1 {
 
 /* ── Footer ─────────────────────────────────────────────────────── */
 .app-footer {
-  /* Stretch full width ignoring the .page padding */
-  margin: 0 -1.25rem;
+  /* No negative margin here. It used to be -1.25rem "to stretch past the .page
+     padding" — but .page has no padding above 640px, so the footer stuck out
+     20px on each side and the whole site scrolled sideways. Only the mobile
+     breakpoint, where .page does get padding, offsets it (see below). */
+  margin: 0;
   background: linear-gradient(135deg, #162ea3 0%, #1e4bdd 50%, #2f66ff 100%);
   color: #fff;
 }
@@ -2148,7 +2151,10 @@ h1 {
 
 /* Bottom bar */
 .footer-bottom {
-  margin: 2.5rem -1.25rem 0;
+  /* Was "2.5rem -1.25rem 0" — the same stale negative margin as .app-footer,
+     reaching past padding its parent does not have. It made every page 20px
+     wider than the screen. The bar is already full width without it. */
+  margin: 2.5rem 0 0;
   padding: 1.1rem clamp(1.25rem, 4vw, 3rem);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
@@ -3437,7 +3443,7 @@ details[open] .contact-faq-q::after {
 /* Responsive */
 @media (max-width: 900px) {
   .contact-info-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .contact-split {
@@ -3473,6 +3479,9 @@ details[open] .contact-faq-q::after {
   padding: 2.5rem 1rem 4rem;
   line-height: 1.7;
   color: #333;
+  /* Long unbreakable tokens like [IMAGE_HOSTING_PROVIDER] or an email
+     address must wrap rather than widen the page on a small phone. */
+  overflow-wrap: break-word;
 }
 
 .legal-title {
@@ -3896,7 +3905,11 @@ details[open] .contact-faq-q::after {
 
 .inst-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  /* minmax(0, 1fr), not 1fr: a bare 1fr track will not shrink below its
+     content's min-content width, and the card headline is single-line
+     (nowrap + ellipsis), so on a phone every card pushed the page wider than
+     the screen. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   margin: 0;
   padding: 0;
