@@ -19,10 +19,14 @@ const userSchema = new mongoose.Schema({
         required: true,
         minlength: 8
     },
+    /* "admin" verifies ADI numbers and handles reports. It can never be
+       chosen at registration (authRoutes only accepts user | enterprise);
+       the only way to grant it is scripts/makeAdmin.mjs, run by someone with
+       database access. */
     role: {
         type: String,
         required: true,
-        enum: ["user", "enterprise"]
+        enum: ["user", "enterprise", "admin"]
     },
     /* Which kind of business this provider runs. Onboarding is deliberately
        limited to these two: driving instructors are the launch vertical and

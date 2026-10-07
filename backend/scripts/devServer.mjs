@@ -179,6 +179,23 @@ for (const [index, profile] of openInstructors.entries()) {
   });
 }
 
+/* A local-only admin, so the verification and report queues can be tried.
+   This database lives in memory and disappears on exit; the password is
+   printed below precisely because it protects nothing. */
+const bcrypt = (await import("bcrypt")).default;
+const DEV_ADMIN_EMAIL = "admin@example.com";
+const DEV_ADMIN_PASSWORD = "AdminDev123";
+await User.create({
+  name: "Dev Admin",
+  email: DEV_ADMIN_EMAIL,
+  password: await bcrypt.hash(DEV_ADMIN_PASSWORD, 10),
+  role: "admin",
+});
+
+console.log(
+  `\nDev admin (this in-memory database only): ${DEV_ADMIN_EMAIL} / ${DEV_ADMIN_PASSWORD}`
+);
+
 console.log(
   `\nIn-memory API ready on http://localhost:${process.env.PORT}\n` +
   `Seeded ${SAMPLE_INSTRUCTORS.length} instructors and ${openInstructors.length} bookings. Nothing is persisted.\n` +

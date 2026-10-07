@@ -160,7 +160,7 @@ test("partial profiles land between the two", () => {
 console.log(`instructorRules: ${passed} assertions passed`);
 
 /* ── phone, publishing, image URLs (onboarding wizard) ─────────────────── */
-import { isHttpsUrl, normaliseIrishPhone, publishBlockers } from "../utils/instructorRules.js";
+import { isHttpsUrl, normaliseIrishPhone, publishBlockers, verificationUpdate } from "../utils/instructorRules.js";
 
 let passedOnboarding = 0;
 const check = (name, fn) => {
@@ -238,6 +238,33 @@ check("only https URLs count as images", () => {
   for (const bad of ["http://example.com/x.jpg", "javascript:alert(1)", "data:image/png;base64,AA", "not a url", ""]) {
     assert.equal(isHttpsUrl(bad), false, bad);
   }
+});
+
+check("a rejected ADI cannot be republished around the decision", () => {
+  const rejected = { ...ready, verification: { status: "rejected" } };
+  assert.equal(publishBlockers(rejected).length, 1);
+  assert.match(publishBlockers(rejected)[0], /could not be matched/);
+});
+
+check("verifying sets the badge and date, and lifts the lessons cap", () => {
+  const now = new Date("2026-10-07T12:00:00Z");
+  const updates = verificationUpdate({ lessonsDone: 250 }, "verified", { now });
+  assert.equal(updates["verification.status"], "verified");
+  assert.equal(updates["verification.verifiedAt"], now);
+  assert.equal(updates.lessonsDone, 250);
+  assert.equal("isPublished" in updates, false);
+});
+
+check("rejecting unlists the profile and zeroes the self-reported count", () => {
+  const updates = verificationUpdate({ lessonsDone: 250 }, "rejected", { note: "Number not on register" });
+  assert.equal(updates.isPublished, false);
+  assert.equal(updates.lessonsDone, 0);
+  assert.equal(updates["verification.verifiedAt"], null);
+  assert.equal(updates["verification.note"], "Number not on register");
+});
+
+check("an unknown decision changes nothing", () => {
+  assert.equal(verificationUpdate({}, "approved-ish"), null);
 });
 
 console.log(`onboarding rules: ${passedOnboarding} assertions passed`);

@@ -19,6 +19,7 @@ import favoriteRoutes from './routes/favoriteRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import instructorRoutes from './routes/instructorRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 // app config
 const app = express();
@@ -200,6 +201,7 @@ app.use('/api/favorites', favoriteRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/instructors', instructorRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes);
 
 /*
  * Serve the built frontend from this same app.

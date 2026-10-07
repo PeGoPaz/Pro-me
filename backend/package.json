@@ -10,7 +10,8 @@
     "test": "node --test tests/*.test.mjs",
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "dev:memory": "node scripts/devServer.mjs"
+    "dev:memory": "node scripts/devServer.mjs",
+    "make-admin": "node scripts/makeAdmin.mjs"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

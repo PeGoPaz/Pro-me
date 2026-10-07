@@ -165,6 +165,14 @@ export const publishBlockers = (profile = {}) => {
     blockers.push("Say whether you teach automatic, manual or both");
   }
 
+  /* An admin checked the register and the ADI number did not match. Teaching
+     for reward without a permit is an offence, so a rejected profile stays
+     off the listing until it is re-checked — the instructor cannot simply
+     republish around the decision. */
+  if (profile.verification?.status === "rejected") {
+    blockers.push("Your ADI number could not be matched to the RSA register — contact us to have it re-checked");
+  }
+
   if (!profile.declarations?.adiConfirmedAt) {
     blockers.push("Confirm that you hold a current ADI permit");
   }
@@ -185,4 +193,30 @@ export const isHttpsUrl = (value) => {
   } catch {
     return false;
   }
+};
+
+/* ── Admin verification decisions ─────────────────────────────────────────
+   What a verify / reject decision changes on a profile. Verification is done
+   by a person comparing the profile with the RSA public register (name, ADI
+   number, counties, categories); this only encodes the consequences.
+
+   - verified: the badge appears, ranking improves, the lessons cap lifts.
+   - rejected: the profile is taken off the listing and the self-reported
+     lessons figure drops to zero (the cap for rejected profiles). Nothing is
+     deleted — reviews and bookings are learners' data and stay. */
+export const VERIFICATION_DECISIONS = ["verified", "rejected"];
+
+export const verificationUpdate = (profile, decision, { note = "", now = new Date() } = {}) => {
+  if (!VERIFICATION_DECISIONS.includes(decision)) return null;
+
+  const updates = {
+    "verification.status": decision,
+    "verification.verifiedAt": decision === "verified" ? now : null,
+    "verification.note": String(note ?? "").trim().slice(0, 500),
+    lessonsDone: clampLessonsDone(profile?.lessonsDone ?? 0, decision),
+  };
+
+  if (decision === "rejected") updates.isPublished = false;
+
+  return updates;
 };
