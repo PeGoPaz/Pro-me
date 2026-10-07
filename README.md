@@ -20,11 +20,22 @@ product direction. That file is the source of truth, not this one.
 - **Account deletion**: a departing learner's reviews are anonymised rather than deleted, because a review is also about the instructor
 - **Mobile-first**: most browsing and comparison happens on phones
 
+### For instructors and admins
+
+- **Onboarding** at `/onboarding`: a step-by-step profile setup that saves as it goes. An instructor without a published profile is sent there after signing in.
+- **Admin** at `/admin`: verify ADI numbers against the RSA register, and work through reported content. Grant the role with:
+
+  ```bash
+  cd backend
+  npm run make-admin -- someone@example.com
+  ```
+
+  It only promotes an existing learner account, and only through the database — there is no way to become an admin through the website. Locally, `npm run dev:memory` seeds a dev-only admin and prints its login.
+
 ### Not built yet
 
-Instructor onboarding has no UI — profiles can currently only be created through
-the API. There is also no admin role, so the verified badge cannot yet be granted,
-and photo upload (Cloudinary) is not wired up.
+Photo uploads (Cloudinary) are not wired up, so instructor galleries cannot be
+filled in yet, and a reported review cannot be hidden from the site.
 
 ## Tech Stack
 

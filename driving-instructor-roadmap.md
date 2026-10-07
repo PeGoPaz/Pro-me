@@ -405,11 +405,17 @@ the two remaining items still bite.
 - **Avatars are stored as base64 data URLs (up to 2MB) in Mongo.** Acceptable for avatars, not viable for galleries. Blocked on the photo upload pipeline (multer + Cloudinary, both still unused dependencies) — until that exists there is nothing to replace them with.
 - **Bookings and reviews moved onto the instructor**, away from the `Enterprise` listing they used to hang off. `Enterprise` itself survives only as the `Other` category's listing model; it should be reconsidered when `Other` gets its own direction.
 
-### New debt introduced since
+### Debt introduced since, and what happened to it
 
-- **No instructor can create a profile through the UI.** `PUT /api/instructors/me` exists and is tested, but nothing calls it — the step-by-step onboarding wizard this document specifies has not been built. Profiles can currently only be created via the API or the dev seed, which makes it the single biggest gap in Phase 1.
-- **No admin role or verification queue.** `User.role` is still `user | enterprise`, so nobody can move a profile to `verified` and the badge can never legitimately appear.
-- **The site scrolls horizontally by ~20px at 375px width** on every page. Mobile-first is a stated principle, so this matters.
+- ~~**No instructor can create a profile through the UI.**~~ — the onboarding wizard exists at `/onboarding` (basics, coverage, categories, about, review). Unpublished instructors are sent there on login, and the provider dashboard shows profile completion. The **Media** step is left out until photo uploads exist.
+- ~~**No admin role or verification queue.**~~ — `/admin` has the ADI verification queue (checked by hand against the RSA register, as this document specifies for launch) and the DSA report queue, with Article 17 statements of reasons enforced. The role can only be granted with `npm run make-admin` against the database, and only to a learner account.
+- ~~**The site scrolls horizontally on phones.**~~ — stale negative margins on the footer, plain `1fr` grid tracks on the search page, and the provider dashboard growing to the activity heatmap's width. Every page measured at zero overflow at 320, 375 and 1280px.
+
+### Still outstanding
+
+- **Photo uploads** (multer + Cloudinary). Avatars are still base64 in the user document, now resized to ~100KB in the browser and served as cacheable images rather than inlined into JSON. Galleries need real uploads.
+- **Reviews cannot be hidden** after a report — only profiles can be taken off the listing. Moderating a review currently means deleting it in the database.
+- **Google Fonts are loaded from Google's servers**, which sends every visitor's IP to Google. German courts have found that a GDPR breach; self-hosting the two fonts would remove the question.
 
 ## Technical Notes
 
