@@ -113,14 +113,6 @@ const generalLimiter = rateLimit({
 });
 app.use('/api', generalLimiter);
 
-// Security: Stricter rate limiting for auth endpoints
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // limit each IP to 5 login/register attempts per window
-    message: { message: 'Too many authentication attempts, please try again after 15 minutes.' },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
 
 app.use(express.json({ limit: '5mb' }));
 
@@ -197,7 +189,9 @@ app.get('/api/health', (_req, res) => {
 
 //api endpoints
 
-app.use('/api/auth', authLimiter, authRoutes);
+// Brute-force limits live on the login and register routes themselves (see
+// authRoutes.js), not on all of /api/auth — /auth/me runs on every page load.
+app.use('/api/auth', authRoutes);
 app.use('/api/booking', bookingRoutes);
 app.use('/api/enterprise', enterpriseRoutes);
 app.use('/api/reviews', reviewRoutes);

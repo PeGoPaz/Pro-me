@@ -1,6 +1,7 @@
 import express from "express";
 import bcrypt from "bcrypt";
 import validator from "validator";
+import rateLimit from "express-rate-limit";
 import User from "../models/User.js";
 import Review from "../models/Review.js";
 import Enterprise from "../models/Enterprise.js";
@@ -10,7 +11,39 @@ import { requireAuth } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.post("/register", async (req, res) => {
+/*
+ * Brute-force protection, on the two routes that take credentials and nowhere
+ * else.
+ *
+ * This used to wrap the whole /api/auth router, so GET /auth/me — which the
+ * frontend calls on every page load — counted against a budget of five per
+ * fifteen minutes. Refresh the page five times and you were logged out: the
+ * next /me returned 429 and the app treated you as signed out. Avatar uploads
+ * and logout spent the same budget.
+ *
+ * Login only counts FAILED attempts: a person who signs in and out repeatedly
+ * is not attacking anything, while a password-guessing run is all failures.
+ */
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  skipSuccessfulRequests: true,
+  message: { message: "Too many failed sign-in attempts, please try again after 15 minutes." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+/* Registration counts every attempt — the risk there is bulk account
+   creation, and successful ones are exactly what a bot produces. */
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: { message: "Too many accounts created from this address, please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.post("/register", registerLimiter, async (req, res) => {
   try {
     const { name, email, password, role, providerType } = req.body;
 
@@ -82,7 +115,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
