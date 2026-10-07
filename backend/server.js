@@ -18,6 +18,7 @@ import referenceRoutes from './routes/referenceRoutes.js';
 import favoriteRoutes from './routes/favoriteRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import instructorRoutes from './routes/instructorRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 // app config
 const app = express();
@@ -204,6 +205,7 @@ app.use('/api/reference', referenceRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/instructors', instructorRoutes);
+app.use('/api/users', userRoutes);
 
 /*
  * Serve the built frontend from this same app.

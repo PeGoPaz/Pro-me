@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import Enterprise from "../models/Enterprise.js";
 import User from "../models/User.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { withPublicAvatar } from "../utils/avatar.js";
 
 const router = express.Router();
 
@@ -12,9 +13,10 @@ const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 router.get("/services/public", async (_req, res) => {
   try {
     const services = await Enterprise.find({ isArchived: { $ne: true } })
-      .populate("userId", "name avatarUrl")
-      .sort({ createdAt: -1 });
-    return res.json(services);
+      .populate("userId", "name avatarUrl updatedAt")
+      .sort({ createdAt: -1 })
+      .lean();
+    return res.json(services.map((service) => ({ ...service, userId: withPublicAvatar(service.userId) })));
   } catch (error) {
     console.error("Public services fetch error:", error.message);
     return res.status(500).json({ message: "Failed to fetch public services" });
@@ -31,12 +33,13 @@ router.get("/services/public/:id", async (req, res) => {
     const service = await Enterprise.findOne({
       _id: id,
       isArchived: { $ne: true },
-    }).populate("userId", "name avatarUrl");
+    }).populate("userId", "name avatarUrl updatedAt");
     if (!service) {
       return res.status(404).json({ message: "Service not found" });
     }
 
-    return res.json(service);
+    const plain = service.toObject();
+    return res.json({ ...plain, userId: withPublicAvatar(plain.userId) });
   } catch (error) {
     console.error("Public service fetch error:", error.message);
     return res.status(500).json({ message: "Failed to fetch public service" });
@@ -51,7 +54,7 @@ router.get("/providers/public/:providerId", async (req, res) => {
     }
 
     const provider = await User.findOne({ _id: providerId, role: "enterprise" })
-      .select("name createdAt avatarUrl");
+      .select("name createdAt avatarUrl updatedAt");
     if (!provider) {
       return res.status(404).json({ message: "Provider not found" });
     }
@@ -62,7 +65,7 @@ router.get("/providers/public/:providerId", async (req, res) => {
     })
       .sort({ createdAt: -1 });
 
-    return res.json({ provider, services });
+    return res.json({ provider: withPublicAvatar(provider), services });
   } catch (error) {
     console.error("Provider profile fetch error:", error.message);
     return res.status(500).json({ message: "Failed to fetch provider profile" });

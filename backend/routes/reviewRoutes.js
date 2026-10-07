@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import Review from "../models/Review.js";
 import Enterprise from "../models/Enterprise.js";
 import User from "../models/User.js";
+import { withPublicAvatar } from "../utils/avatar.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 
 const router = express.Router();
@@ -87,10 +88,18 @@ router.get("/provider/:providerId", async (req, res) => {
       return res.status(400).json({ message: "Invalid providerId." });
     }
 
-    const reviews = await Review.find({ providerId })
-      .populate("reviewerId", "name avatarUrl")
+    const found = await Review.find({ providerId })
+      .populate("reviewerId", "name avatarUrl updatedAt")
       .populate("serviceId", "subject")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
+
+    /* Every reviewer's avatar as a link, not inline base64 — otherwise a
+       profile with fifty reviews ships fifty images inside its JSON. */
+    const reviews = found.map((review) => ({
+      ...review,
+      reviewerId: withPublicAvatar(review.reviewerId),
+    }));
 
     const count = reviews.length;
     const avg =

@@ -4,6 +4,7 @@ import Booking from "../models/Booking.js";
 import Enterprise from "../models/Enterprise.js";
 import User from "../models/User.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { withPublicAvatar } from "../utils/avatar.js";
 
 const router = express.Router();
 
@@ -21,8 +22,14 @@ router.use(requireAuth);
 const populateBooking = (query) =>
   query
     .populate("userId", "name email role")
-    .populate("instructorId", "name email avatarUrl")
+    .populate("instructorId", "name email avatarUrl updatedAt")
     .populate("serviceId", "subject price");
+
+/* Bookings carry the instructor's avatar as a link, never inline base64. */
+const withInstructorAvatarLink = (booking) => {
+  const plain = typeof booking.toObject === "function" ? booking.toObject() : booking;
+  return { ...plain, instructorId: withPublicAvatar(plain.instructorId) };
+};
 
 /* ── POST /api/booking — a learner requests a lesson ───────────────────── */
 router.post("/", requireRole(["user"]), async (req, res) => {
@@ -113,7 +120,7 @@ router.get("/", async (req, res) => {
       createdAt: -1,
     });
 
-    return res.status(200).json(bookings);
+    return res.status(200).json(bookings.map(withInstructorAvatarLink));
   } catch (error) {
     console.error("Booking error:", error.message);
     return res.status(500).json({ message: "An error occurred" });
@@ -142,7 +149,7 @@ router.get("/:id", async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    return res.status(200).json(booking);
+    return res.status(200).json(withInstructorAvatarLink(booking));
   } catch (error) {
     console.error("Booking error:", error.message);
     return res.status(500).json({ message: "An error occurred" });

@@ -29,6 +29,7 @@ import {
   buildPagination,
   DEFAULT_SORT,
 } from "../utils/instructorSearch.js";
+import { avatarProjection } from "../utils/avatar.js";
 
 const router = express.Router();
 
@@ -81,11 +82,17 @@ router.get("/", async (req, res) => {
       { $sort: sort },
       { $skip: skip },
       { $limit: limit },
+      /* Only the user fields a card needs. This lookup used to pull whole user
+         documents — password hash and multi-megabyte base64 avatar included —
+         for every result on the page. */
       {
         $lookup: {
           from: "users",
-          localField: "userId",
-          foreignField: "_id",
+          let: { uid: "$userId" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$_id", "$$uid"] } } },
+            { $project: { name: 1, updatedAt: 1, avatarUrl: avatarProjection } },
+          ],
           as: "user",
         },
       },
@@ -159,7 +166,7 @@ router.get("/:id", async (req, res, next) => {
        cards link by user id and deep links may carry either. */
     const profile = await InstructorProfile.findOne({
       $or: [{ _id: id }, { userId: id }],
-    }).populate("userId", "name avatarUrl");
+    }).populate("userId", "name avatarUrl updatedAt");
 
     if (!profile || !profile.isPublished) {
       return res.status(404).json({ message: "Instructor not found" });

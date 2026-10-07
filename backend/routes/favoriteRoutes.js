@@ -5,6 +5,7 @@ import Favorite from "../models/Favorite.js";
 import User from "../models/User.js";
 import InstructorProfile from "../models/InstructorProfile.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { withPublicAvatar } from "../utils/avatar.js";
 
 const router = express.Router();
 
@@ -18,7 +19,7 @@ router.use(requireAuth, requireRole(["user"]));
 router.get("/", async (req, res) => {
   try {
     const favorites = await Favorite.find({ userId: req.session.user.id })
-      .populate("instructorId", "name avatarUrl")
+      .populate("instructorId", "name avatarUrl updatedAt")
       .sort({ createdAt: -1 });
 
     /* Attach the profile summary each card needs, in one query rather than
@@ -39,7 +40,7 @@ router.get("/", async (req, res) => {
       favorites.map((favorite) => ({
         id: favorite._id,
         savedAt: favorite.createdAt,
-        instructor: favorite.instructorId,
+        instructor: withPublicAvatar(favorite.instructorId),
         profile: profileByUser.get(String(favorite.instructorId?._id)) ?? null,
       }))
     );

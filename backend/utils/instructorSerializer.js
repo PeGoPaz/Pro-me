@@ -6,6 +6,7 @@
  */
 
 import { isLessonsDoneCorroborated } from "./instructorRules.js";
+import { publicAvatarUrl } from "./avatar.js";
 
 /* What anyone browsing the site may see.
    Deliberately absent: verification.note (admin-only) and every subscription
@@ -25,7 +26,8 @@ export const toPublicProfile = (
 
     headline: profile.headline || "",
     bio: profile.bio || "",
-    profilePhotoUrl: profile.profilePhotoUrl || user?.avatarUrl || "",
+    /* Falls back to the account avatar — as a link, never the raw data URL. */
+    profilePhotoUrl: profile.profilePhotoUrl || publicAvatarUrl(user),
     gallery: profile.gallery ?? [],
 
     counties: profile.counties ?? [],
