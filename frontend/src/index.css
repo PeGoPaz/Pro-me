@@ -895,6 +895,11 @@ h1 {
   flex-direction: column;
   gap: 1.75rem;
   padding-bottom: 2rem;
+  /* .dash-page is a grid item of <main>; without this it grows to the
+     activity heatmap's full width (~900px) and the whole dashboard scrolled
+     sideways by over 600px on a phone. The heatmap scrolls inside its own
+     box instead (.dash-activity-scroll). */
+  min-width: 0;
 }
 
 /* Profile card */
@@ -1235,6 +1240,8 @@ h1 {
   gap: 0.45rem;
   color: #75809d;
   font-size: 0.8rem;
+  /* Four legend entries do not fit on a phone in one row. */
+  flex-wrap: wrap;
 }
 
 .dash-activity-legend-label {
