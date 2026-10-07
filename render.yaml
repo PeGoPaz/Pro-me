@@ -1,43 +1,41 @@
+# Pro.me — один веб-сервис: Express отдаёт и API, и собранный фронтенд.
+#
+# Раньше здесь было два сервиса на двух поддоменах onrender.com. onrender.com
+# входит в Public Suffix List, поэтому это два разных сайта, и сессионная кука
+# становилась сторонней. Safari (то есть все iPhone) блокирует сторонние куки
+# полностью — вход бы не работал у большой части мобильных пользователей.
+# Один источник (origin) — единственная схема, которая работает везде.
+
 services:
-  # ── Backend (Node.js / Express) ──────────────────────────────────────────────
   - type: web
-    name: pro-me-backend
+    name: pro-me
     runtime: node
-    rootDir: backend
-    buildCommand: npm install
-    startCommand: node server.js
+
+    # Без явного plan Render создаёт сервис на ПЛАТНОМ тарифе (0.5c-512mb).
+    plan: free
+
+    # По умолчанию oregon (США), и после создания регион поменять нельзя.
+    # Роадмап требует хостинг в ЕС из-за GDPR. Кластер Atlas — тоже во Франкфурте.
+    region: frankfurt
+
+    # Сборка фронтенда, затем production-зависимости бэкенда.
+    # Скрипты лежат в корневом package.json.
+    buildCommand: npm run build
+    startCommand: npm start
+
+    # Отвечает 200 только при живом подключении к базе.
+    healthCheckPath: /api/health
+
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
-      - key: MONGO_URI
-        sync: false          # задаётся вручную в Render Dashboard
-      - key: SESSION_SECRET
-        sync: false          # задаётся вручную в Render Dashboard
-      - key: CLIENT_ORIGIN
-        sync: false          # задаётся вручную: URL задеплоенного фронтенда.
-                             # Точное совпадение, без слеша на конце — от этого
-                             # списка зависит и CORS, и защита сессии от CSRF.
-      # Фронтенд и API здесь — два разных сервиса, то есть разные registrable
-      # domains, и запросы между ними кросс-сайтовые. Поэтому сессионная кука
-      # должна быть SameSite=None, иначе браузер её просто не отправит и вход
-      # работать не будет. Значение по умолчанию в продакшене уже none; строка
-      # ниже нужна, только если вы свели фронт и API под один домен.
-      # - key: COOKIE_SAMESITE
-      #   value: strict
 
-  # ── Frontend (React / Vite → Static Site) ────────────────────────────────────
-  - type: web
-    name: pro-me-frontend
-    runtime: static
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    envVars:
-      - key: VITE_API_URL
-        sync: false          # задаётся вручную: https://<pro-me-backend>.onrender.com/api
+      # Строка подключения из Atlas. Вводится вручную при создании Blueprint.
+      - key: MONGO_URI
+        sync: false
+
+      # Render сам сгенерирует случайный 256-битный секрет.
+      - key: SESSION_SECRET
+        generateValue: true
+
+      # PORT и RENDER_EXTERNAL_URL Render выставляет сам.

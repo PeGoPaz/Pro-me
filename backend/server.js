@@ -1,3 +1,6 @@
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
@@ -51,37 +54,54 @@ app.use(
     })
 );
 
-// Security: CORS configuration - restrict to specific origin in production
-const allowedOrigins = process.env.CLIENT_ORIGIN 
-    ? process.env.CLIENT_ORIGIN.split(',')
-    : ['http://localhost:5173', 'http://localhost:3000'];
+/*
+ * CORS.
+ *
+ * In production the frontend is served by this same app (see the static block
+ * near the bottom), so the browser's requests are same-origin — but browsers
+ * still attach an Origin header to same-origin POST/PUT/DELETE requests. If we
+ * only checked an allowlist, every login would be rejected unless
+ * CLIENT_ORIGIN happened to be set to the site's own URL. So a request whose
+ * Origin is this server's own origin is always allowed.
+ *
+ * CLIENT_ORIGIN remains for anyone who splits the frontend onto another host.
+ * RENDER_EXTERNAL_URL is set by Render automatically and is our own public URL.
+ */
+const allowedOrigins = [
+    ...(process.env.CLIENT_ORIGIN ? process.env.CLIENT_ORIGIN.split(',') : []),
+    ...(process.env.RENDER_EXTERNAL_URL ? [process.env.RENDER_EXTERNAL_URL] : []),
+    ...(isProduction ? [] : ['http://localhost:5173', 'http://localhost:3000']),
+].map((origin) => origin.trim().replace(/\/$/, ''));
 
 app.use(
-    cors({
-        origin: (origin, callback) => {
-            // Allow requests with no origin (mobile apps, curl, etc.)
-            if (!origin) return callback(null, true);
-            
-            if (allowedOrigins.includes(origin)) {
-                return callback(null, true);
-            }
-            
-            // In development, allow all origins
-            if (process.env.NODE_ENV !== 'production') {
-                return callback(null, true);
-            }
-            
-            return callback(new Error('Not allowed by CORS'));
-        },
-        credentials: true,
+    cors((req, callback) => {
+        const origin = req.get('origin');
+        const selfOrigin = `${req.protocol}://${req.get('host')}`;
+
+        const allowed =
+            !origin ||                      // curl, server-to-server, same-origin GETs
+            origin === selfOrigin ||        // the frontend this app serves itself
+            allowedOrigins.includes(origin) ||
+            !isProduction;                  // anything goes in development
+
+        if (!allowed) {
+            const error = new Error('Not allowed by CORS');
+            error.status = 403;
+            return callback(error);
+        }
+
+        return callback(null, { origin: true, credentials: true });
     })
 );
 
 /*
- * Rate limiting — API only, so static files never count against it.
- * 300 per 15 minutes rather than 100, because Irish mobile carriers put many
- * subscribers behind one address (CGNAT), and a limit sized for one person
- * would be shared by strangers.
+ * Rate limiting — API only.
+ *
+ * Mounted on /api rather than globally: now that this app also serves the
+ * frontend, every JS, CSS and image file would otherwise count against the same
+ * budget as API calls. 300 per 15 minutes rather than 100, because Irish
+ * mobile carriers put many subscribers behind one address (CGNAT), and a limit
+ * sized for one person would be shared by strangers.
  */
 const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -121,35 +141,31 @@ if (!sessionSecret && process.env.NODE_ENV === 'production') {
 /*
  * Session cookie SameSite policy.
  *
- * This was hard-coded to 'strict' in production, which silently broke login on
- * the deployment we actually ship. render.yaml runs the frontend and the API as
- * two separate services — pro-me-frontend.onrender.com and
- * pro-me-backend.onrender.com. `onrender.com` is on the Public Suffix List, so
- * those are two different registrable domains and every API call from the
- * frontend is a cross-site request. A SameSite=strict (or lax) cookie is simply
- * not attached to those, so login would report success and the very next
- * /auth/me would return 401, with nothing in the logs to explain it.
+ * The frontend is served by this same app, so the session cookie is
+ * first-party and 'lax' is the right default everywhere: it is sent on normal
+ * navigation (so arriving from an email link keeps you signed in) and withheld
+ * from cross-site POSTs, which is what protects us from CSRF.
  *
- * 'none' fixes that, at the cost of the SameSite CSRF protection. Two things
- * carry that weight instead: CORS is restricted to an explicit origin
- * allowlist, and every mutating route consumes JSON, so a cross-origin POST
- * needs a preflight that the allowlist rejects — a plain HTML form from an
- * attacker's page cannot produce one.
+ * History, because the obvious alternative was tried: the frontend and API
+ * used to be two Render services on two onrender.com subdomains. onrender.com
+ * is on the Public Suffix List, so those are different sites and the cookie
+ * was third-party. Switching it to SameSite=None made Chrome work, but Safari —
+ * and therefore every iPhone — blocks third-party cookies outright, whatever
+ * their SameSite value. For a mobile-first product in Ireland that is a large
+ * share of users who could never log in. Same-origin is the only arrangement
+ * that works everywhere.
  *
- * Set COOKIE_SAMESITE=strict once the frontend and API live under one
- * registrable domain (e.g. app.example.ie and api.example.ie). That is the
- * safer arrangement and the one to aim for.
+ * COOKIE_SAMESITE=none exists only for anyone who splits the frontend onto
+ * another site again; it forces Secure, and will still fail on Safari.
  */
-const configuredSameSite = process.env.COOKIE_SAMESITE;
-const sameSite = configuredSameSite
-    || (process.env.NODE_ENV === 'production' ? 'none' : 'lax');
+const sameSite = process.env.COOKIE_SAMESITE || 'lax';
 
 /* Browsers reject SameSite=None unless the cookie is also Secure, and reject it
    silently — so a misconfiguration here would look exactly like the bug above. */
 const secureCookie = sameSite === 'none' ? true : process.env.NODE_ENV === 'production';
 
-if (sameSite === 'none' && process.env.NODE_ENV !== 'production') {
-    console.warn('COOKIE_SAMESITE=none requires HTTPS; sessions will not work over plain http://localhost.');
+if (sameSite === 'none') {
+    console.warn('COOKIE_SAMESITE=none: the session cookie is third-party and Safari/iOS will block it.');
 }
 
 app.use(
@@ -171,10 +187,14 @@ app.use(
     })
 );
 
-//api endpoints
-app.get('/',(req,res) => {
-    res.send('API WORKING...');
+// Health check for the platform. Only answers once the database is connected,
+// so a deploy is not marked live while it cannot actually serve requests.
+app.get('/api/health', (_req, res) => {
+    const connected = mongoose.connection.readyState === 1;
+    res.status(connected ? 200 : 503).json({ ok: connected });
 });
+
+//api endpoints
 
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/booking', bookingRoutes);
@@ -184,6 +204,41 @@ app.use('/api/reference', referenceRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/instructors', instructorRoutes);
+
+/*
+ * Serve the built frontend from this same app.
+ *
+ * One origin for the page and the API is what makes the session cookie
+ * first-party (see the SameSite note above). Only active when a build exists,
+ * so local development — where Vite serves the frontend on :5173 and proxies
+ * /api here — is unaffected.
+ */
+const frontendDist = fileURLToPath(new URL('../frontend/dist', import.meta.url));
+const frontendIndex = path.join(frontendDist, 'index.html');
+
+if (existsSync(frontendIndex)) {
+    // Vite fingerprints everything under /assets, so it can be cached forever.
+    app.use(
+        '/assets',
+        express.static(path.join(frontendDist, 'assets'), { immutable: true, maxAge: '1y' })
+    );
+    app.use(express.static(frontendDist, { index: false }));
+
+    // Client-side routes (/instructors/123, /terms, ...) all load index.html.
+    // API paths and missing files with an extension fall through to the 404.
+    app.use((req, res, next) => {
+        if (req.method !== 'GET' || req.path.startsWith('/api/') || path.extname(req.path)) {
+            return next();
+        }
+        // Never cache the shell, or a deploy would keep serving stale asset names.
+        res.set('Cache-Control', 'no-cache');
+        return res.sendFile(frontendIndex);
+    });
+} else {
+    app.get('/', (_req, res) => {
+        res.send('API running. The frontend is served separately in development (npm --prefix frontend run dev).');
+    });
+}
 
 // Security: 404 handler for undefined routes
 app.use((req, res) => {
