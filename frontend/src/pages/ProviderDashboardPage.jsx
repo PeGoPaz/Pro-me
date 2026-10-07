@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/index.js";
+import { resizePhotoToDataUrl } from "../utils/avatarImage";
 import { getCategoryImage } from "../utils/categoryImages";
 import { formatDate } from "../utils/formatDate";
 import ActivityHeatmap from "../components/ActivityHeatmap";
@@ -184,22 +185,17 @@ function ProviderDashboardPage() {
 
   const handleAvatarUpload = async (file) => {
     setAvatarError("");
-    if (!file.type.startsWith("image/")) { setAvatarError("Please choose an image file."); return; }
-    if (file.size > 2 * 1024 * 1024) { setAvatarError("Image is too large. Max size is 2MB."); return; }
-
     try {
       setAvatarUploading(true);
-      const avatarUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result));
-        reader.onerror = () => reject(new Error("Failed to read image."));
-        reader.readAsDataURL(file);
-      });
+      /* Resized in the browser first, so a full-size phone photo works. */
+      const avatarUrl = await resizePhotoToDataUrl(file);
       const res = await api.patch("/auth/me/avatar", { avatarUrl });
       setProfile(res.data.user);
       await refreshUser();
-    } catch {
-      setAvatarError("Could not upload avatar. Please try again.");
+    } catch (err) {
+      setAvatarError(
+        err?.response?.data?.message || err?.message || "Could not upload avatar. Please try again."
+      );
     } finally {
       setAvatarUploading(false);
     }
