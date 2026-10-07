@@ -1,0 +1,5 @@
+# Pre-launch: the site is publicly reachable for testing, but its terms and
+# privacy policy are unreviewed drafts. Keep crawlers out until launch, then
+# delete this file and the robots meta tag in index.html.
+User-agent: *
+Disallow: /
