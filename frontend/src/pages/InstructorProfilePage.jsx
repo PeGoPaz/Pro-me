@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../api/index.js";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/auth";
 import { StarDisplay, StarPicker } from "../components/StarRating";
 import ReviewCard from "../components/ReviewCard";
 import ReportDialog from "../components/ReportDialog";

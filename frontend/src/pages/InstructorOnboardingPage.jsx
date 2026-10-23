@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import api from "../api/index.js";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/auth";
 import { resizePhotoToDataUrl } from "../utils/avatarImage";
 import { formatIrishPhone } from "../utils/formatPhone";
 import {

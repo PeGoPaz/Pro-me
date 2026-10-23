@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import api from "../api/index.js";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/auth";
 import InstructorCard from "../components/InstructorCard";
 
 /*

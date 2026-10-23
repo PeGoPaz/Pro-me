@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/auth";
 
 /* Guards a route behind a signed-in session, and optionally a role.
 
