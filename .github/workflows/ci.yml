@@ -25,15 +25,9 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
+      # mongodb-memory-server's postinstall downloads the mongod the model tests
+      # run against; on GitHub's runners that adds a few seconds, not worth a cache.
       - run: npm ci
-
-      # The model tests run against a real mongod from mongodb-memory-server,
-      # a download of about 100 MB; keep it between runs.
-      - uses: actions/cache@v6
-        with:
-          path: ~/.cache/mongodb-binaries
-          key: mongodb-binaries-${{ runner.os }}-${{ hashFiles('backend/package-lock.json') }}
-          restore-keys: mongodb-binaries-${{ runner.os }}-
 
       - run: npm test
 
