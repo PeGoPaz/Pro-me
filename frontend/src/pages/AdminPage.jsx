@@ -141,7 +141,7 @@ function ReportQueue() {
 
   useEffect(() => { load(); }, [load]);
 
-  const draftFor = (id) => drafts[id] ?? { reasons: "", unpublish: false, refer: false };
+  const draftFor = (id) => drafts[id] ?? { reasons: "", unpublish: false, hide: false, refer: false };
   const setDraft = (id, patch) =>
     setDrafts((prev) => ({ ...prev, [id]: { ...draftFor(id), ...patch } }));
 
@@ -154,6 +154,7 @@ function ReportQueue() {
         status,
         statementOfReasons: d.reasons,
         unpublishProfile: status === "actioned" && d.unpublish,
+        hideReview: status === "actioned" && d.hide,
         referToAuthorities: d.refer,
       });
       load();
@@ -194,7 +195,10 @@ function ReportQueue() {
                       {" · "}from {r.reporterId?.name ?? (r.reporterEmail ? r.reporterEmail : "anonymous")}
                     </p>
                   </div>
-                  <span className="ipc-status ipc-status-pending">{r.status}</span>
+                  <div className="adm-item-badges">
+                    {r.target?.hidden && <span className="ipc-status ipc-status-draft">Review hidden</span>}
+                    <span className="ipc-status ipc-status-pending">{r.status}</span>
+                  </div>
                 </div>
 
                 {r.details && <p className="adm-details">“{r.details}”</p>}
@@ -213,6 +217,14 @@ function ReportQueue() {
                     <label className="ob-check">
                       <input type="checkbox" checked={d.unpublish} onChange={(e) => setDraft(r._id, { unpublish: e.target.checked })} />
                       <span>Take this profile off the listing</span>
+                    </label>
+                  )}
+                  {/* A review can be reported more than once; after the first
+                      decision hid it, the later reports only need closing. */}
+                  {r.targetType === "review" && r.target?.link && !r.target.hidden && (
+                    <label className="ob-check">
+                      <input type="checkbox" checked={d.hide} onChange={(e) => setDraft(r._id, { hide: e.target.checked })} />
+                      <span>Hide this review from the profile and every rating, keeping these reasons with it</span>
                     </label>
                   )}
                   <label className="ob-check">

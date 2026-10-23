@@ -5161,6 +5161,13 @@ details[open] .contact-faq-q::after {
   outline: none;
 }
 
+.adm-item-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
 .adm-checks {
   display: flex;
   flex-direction: column;
