@@ -7,6 +7,7 @@ import Review from "../models/Review.js";
 import User from "../models/User.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { VERIFICATION_DECISIONS, verificationUpdate } from "../utils/instructorRules.js";
+import { hideReview } from "../utils/reviews.js";
 
 const router = express.Router();
 
@@ -120,9 +121,14 @@ const describeTarget = async (report) => {
     return { kind: "profile", label: user?.name ?? "(account deleted)", link: `/instructors/${report.targetId}` };
   }
   if (report.targetType === "review") {
-    const review = await Review.findById(report.targetId).select("rating comment providerId").lean();
+    const review = await Review.findById(report.targetId).select("rating comment providerId hiddenAt").lean();
     return review
-      ? { kind: "review", label: `${review.rating}★ — ${review.comment || "(no comment)"}`, link: `/instructors/${review.providerId}` }
+      ? {
+          kind: "review",
+          label: `${review.rating}★ — ${review.comment || "(no comment)"}`,
+          link: `/instructors/${review.providerId}`,
+          hidden: Boolean(review.hiddenAt),
+        }
       : { kind: "review", label: "(review deleted)", link: null };
   }
   return { kind: report.targetType, label: String(report.targetId), link: null };
@@ -151,11 +157,11 @@ router.get("/reports", async (req, res) => {
 });
 
 /* PATCH /api/admin/reports/:id
-   { status, statementOfReasons, unpublishProfile?, referToAuthorities? } */
+   { status, statementOfReasons, unpublishProfile?, hideReview?, referToAuthorities? } */
 router.patch("/reports/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, statementOfReasons, unpublishProfile, referToAuthorities } = req.body;
+    const { status, statementOfReasons, unpublishProfile, hideReview: hide, referToAuthorities } = req.body;
 
     if (!isValidObjectId(id)) {
       return res.status(400).json({ message: "Invalid report id" });
@@ -190,8 +196,9 @@ router.patch("/reports/:id", async (req, res) => {
     }
     await report.save();
 
-    /* The one content action available today: take a reported profile off
-       the listing. Nothing is deleted. */
+    /* The content actions: take a reported profile off the listing, or hide a
+       reported review, which keeps the statement of reasons with it. Nothing
+       is deleted. */
     let unpublished = false;
     if (unpublishProfile === true && report.targetType === "profile" && status === "actioned") {
       const result = await InstructorProfile.updateOne(
@@ -200,8 +207,12 @@ router.patch("/reports/:id", async (req, res) => {
       );
       unpublished = result.modifiedCount > 0;
     }
+    let hidden = false;
+    if (hide === true && report.targetType === "review" && status === "actioned") {
+      hidden = await hideReview(report.targetId, { reason: report.statementOfReasons, reportId: report._id });
+    }
 
-    return res.json({ message: "Report updated", report, unpublished });
+    return res.json({ message: "Report updated", report, unpublished, hidden });
   } catch (error) {
     console.error("Admin report update error:", error.message);
     return res.status(500).json({ message: "Failed to update the report" });

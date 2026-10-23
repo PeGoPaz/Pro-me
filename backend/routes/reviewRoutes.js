@@ -4,6 +4,7 @@ import Review from "../models/Review.js";
 import Enterprise from "../models/Enterprise.js";
 import User from "../models/User.js";
 import { withPublicAvatar } from "../utils/avatar.js";
+import { VISIBLE_REVIEW, ratingStats } from "../utils/reviews.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 
 const router = express.Router();
@@ -88,7 +89,7 @@ router.get("/provider/:providerId", async (req, res) => {
       return res.status(400).json({ message: "Invalid providerId." });
     }
 
-    const found = await Review.find({ providerId })
+    const found = await Review.find({ providerId, ...VISIBLE_REVIEW })
       .populate("reviewerId", "name avatarUrl updatedAt")
       .populate("serviceId", "subject")
       .sort({ createdAt: -1 })
@@ -101,13 +102,8 @@ router.get("/provider/:providerId", async (req, res) => {
       reviewerId: withPublicAvatar(review.reviewerId),
     }));
 
-    const count = reviews.length;
-    const avg =
-      count > 0
-        ? Math.round((reviews.reduce((sum, r) => sum + r.rating, 0) / count) * 10) / 10
-        : null;
-
-    return res.status(200).json({ reviews, count, averageRating: avg });
+    const { reviewCount, averageRating } = ratingStats(reviews.map((review) => review.rating));
+    return res.status(200).json({ reviews, count: reviewCount, averageRating });
   } catch (error) {
     console.error("Review error:", error.message);
     return res.status(500).json({ message: "An error occurred." });

@@ -35,6 +35,17 @@ const reviewSchema = new mongoose.Schema(
       trim: true,
       maxlength: 1000,
     },
+
+    /* Set when a moderator hides the review after a report (DSA Article 17).
+       It then counts nowhere public - see utils/reviews.js - but is kept with
+       the decision, for an appeal and the Article 24(3) transparency report. */
+    hiddenAt: { type: Date, default: null },
+    hiddenReason: { type: String, trim: true, maxlength: 2000, default: "" },
+    hiddenByReport: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Report",
+      default: null,
+    },
   },
   { timestamps: true }
 );

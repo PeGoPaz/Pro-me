@@ -2,9 +2,9 @@ import express from "express";
 import mongoose from "mongoose";
 
 import InstructorProfile from "../models/InstructorProfile.js";
-import Review from "../models/Review.js";
 import User from "../models/User.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { ratingStats, reviewStatsFor, visibleReviewsLookup } from "../utils/reviews.js";
 import { COUNTY_SLUGS } from "../data/counties.js";
 import { TEST_CENTRE_SLUGS } from "../data/testCentres.js";
 import {
@@ -49,16 +49,6 @@ const validateSet = (values, allowed, label) => {
   return { ok: true, value: [...new Set(values)] };
 };
 
-const reviewStatsFor = async (instructorUserId) => {
-  const reviews = await Review.find({ providerId: instructorUserId }).select("rating");
-  const reviewCount = reviews.length;
-  const averageRating =
-    reviewCount > 0
-      ? Math.round((reviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount) * 10) / 10
-      : null;
-  return { reviewCount, averageRating };
-};
-
 /* ── GET /api/instructors — the filtered search page ───────────────────
    One list-based page with filters, as the roadmap specifies, rather than a
    separate SEO page per county or test centre. */
@@ -99,14 +89,7 @@ router.get("/", async (req, res) => {
       { $unwind: "$user" },
       /* Review stats come from the reviews collection so the rating on a card
          cannot drift from the reviews on the profile. */
-      {
-        $lookup: {
-          from: "reviews",
-          localField: "userId",
-          foreignField: "providerId",
-          as: "reviews",
-        },
-      },
+      visibleReviewsLookup,
     ];
 
     const [rows, total] = await Promise.all([
@@ -115,13 +98,7 @@ router.get("/", async (req, res) => {
     ]);
 
     const results = rows.map((row) => {
-      const ratings = (row.reviews ?? []).map((review) => review.rating);
-      const reviewCount = ratings.length;
-      const averageRating =
-        reviewCount > 0
-          ? Math.round((ratings.reduce((sum, r) => sum + r, 0) / reviewCount) * 10) / 10
-          : null;
-
+      const { reviewCount, averageRating } = ratingStats((row.reviews ?? []).map((review) => review.rating));
       return toPublicProfile(row, { user: row.user, reviewCount, averageRating });
     });
 
