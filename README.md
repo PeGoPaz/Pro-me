@@ -18,7 +18,7 @@ product direction. That file is the source of truth, not this one.
 - **Instructor profiles**: photo, ADI verification badge, coverage, category badges, bio, gallery and reviews
 - **Save and compare**: learners shortlist instructors (requires an account)
 - **Lesson requests**: a learner requests a lesson from an instructor, who accepts or declines. The platform never handles lesson money — learners pay instructors directly
-- **Reporting**: anyone can report a profile or review, signed in or not (DSA Article 16)
+- **Reporting**: anyone can report a profile or review, signed in or not (DSA Article 16). A moderator can take a reported profile off the listing or hide a reported review, always with a statement of reasons (Article 17)
 - **Account deletion**: a departing learner's reviews are anonymised rather than deleted, because a review is also about the instructor
 - **Mobile-first**: most browsing and comparison happens on phones
 
@@ -37,7 +37,7 @@ product direction. That file is the source of truth, not this one.
 ### Not built yet
 
 Photo uploads (Cloudinary) are not wired up, so instructor galleries cannot be
-filled in yet, and a reported review cannot be hidden from the site.
+filled in yet.
 
 ## Tech Stack
 

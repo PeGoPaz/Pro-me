@@ -414,8 +414,8 @@ the two remaining items still bite.
 ### Still outstanding
 
 - **Photo uploads** (multer + Cloudinary). Avatars are still base64 in the user document, now resized to ~100KB in the browser and served as cacheable images rather than inlined into JSON. Galleries need real uploads.
-- **Reviews cannot be hidden** after a report — only profiles can be taken off the listing. Moderating a review currently means deleting it in the database.
-- **Google Fonts are loaded from Google's servers**, which sends every visitor's IP to Google. German courts have found that a GDPR breach; self-hosting the two fonts would remove the question.
+- ~~**Reviews cannot be hidden** after a report~~ — closing a review report as actioned can now hide the review, with the statement of reasons stored on it. A hidden review is kept, for an appeal and the Article 24(3) transparency report, but drops out of the profile, the search cards, every rating and the ranking.
+- ~~**Google Fonts are loaded from Google's servers**~~ — both fonts are bundled from `@fontsource` and served from our own origin, and the CSP now allows fonts and styles from nowhere else.
 
 ## Technical Notes
 
