@@ -3,10 +3,9 @@
 .env.local
 .env.*.local
 
-# Dependencies
+# Dependencies. The package-lock.json files are committed: they pin every
+# transitive version, so CI, Render and a fresh clone install the same tree.
 node_modules/
-package-lock.json
-yarn.lock
 
 # Build outputs
 dist/
