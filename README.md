@@ -1,5 +1,7 @@
 # Pro.me — Find a driving instructor in Ireland
 
+[![CI](https://github.com/PeGoPaz/Pro-me/actions/workflows/ci.yml/badge.svg)](https://github.com/PeGoPaz/Pro-me/actions/workflows/ci.yml)
+
 Pro.me helps learner drivers find and compare approved driving instructors across
 Ireland. The official RSA register already tells you who is approved; this exists
 to help you choose between them — with verified ADI status, photos, reviews and
@@ -51,6 +53,10 @@ filled in yet, and a reported review cannot be hidden from the site.
 integration tests against a real in-memory MongoDB. The integration tests exist
 because every serious bug in this project so far has been index behaviour that
 schema checks could not see.
+
+CI runs them on every push and pull request, alongside `npm run lint` and
+`npm run build` in `frontend/`. Both sides install with `npm ci` from the
+committed lockfiles.
 
 ### Frontend
 - React 18
