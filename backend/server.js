@@ -42,15 +42,20 @@ const trustProxy = process.env.TRUST_PROXY ?? (isProduction ? '1' : '0');
 app.set('trust proxy', /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy);
 
 // Security: Set security headers.
-// Helmet's default CSP only allows images from our own origin and data: URLs.
-// Instructor photos and galleries are external https URLs (Cloudinary, once
-// uploads exist), so img-src is widened to https: — everything else stays at
-// Helmet's defaults.
+// Content Security Policy, starting from Helmet's defaults:
+//  - img-src is widened to https:, because instructor photos and galleries are
+//    external URLs (Cloudinary, once uploads exist);
+//  - font-src and style-src are narrowed to our own origin. Helmet allows any
+//    https: source for both, which is what let the fonts come from Google; they
+//    are bundled now, and no stylesheet or <style> tag comes from anywhere else.
+//    React's style props are set through the DOM and are not affected.
 app.use(
     helmet({
         contentSecurityPolicy: {
             directives: {
                 'img-src': ["'self'", 'data:', 'https:'],
+                'font-src': ["'self'"],
+                'style-src': ["'self'"],
             },
         },
     })
