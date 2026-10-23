@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import AppFooter from "./components/AppFooter";
 import AppHeader from "./components/AppHeader";
+import RequireAuth from "./components/RequireAuth";
 import AdminPage from "./pages/AdminPage";
 import BookingPage from "./pages/BookingPage";
 import ContactPage from "./pages/ContactPage";
@@ -50,17 +51,17 @@ function App() {
         {/* Kept for the Other category, which has no profile of its own yet.
             Driving instructors live at /instructors/:instructorId. */}
         <Route path="/providers/:providerId" element={<MainLayout><ProviderProfile /></MainLayout>} />
-        <Route path="/booking" element={<MainLayout><BookingPage /></MainLayout>} />
+        <Route path="/booking" element={<MainLayout><RequireAuth role="user"><BookingPage /></RequireAuth></MainLayout>} />
         <Route path="/contact" element={<MainLayout><ContactPage /></MainLayout>} />
         <Route path="/terms" element={<MainLayout><TermsPage /></MainLayout>} />
         <Route path="/privacy" element={<MainLayout><PrivacyPage /></MainLayout>} />
         <Route
           path="/dashboard/customer"
-          element={<MainLayout><CustomerDashboardPage /></MainLayout>}
+          element={<MainLayout><RequireAuth><CustomerDashboardPage /></RequireAuth></MainLayout>}
         />
         <Route
           path="/dashboard/provider"
-          element={<MainLayout><ProviderDashboardPage /></MainLayout>}
+          element={<MainLayout><RequireAuth><ProviderDashboardPage /></RequireAuth></MainLayout>}
         />
       </Routes>
     </BrowserRouter>

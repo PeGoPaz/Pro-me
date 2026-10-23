@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useSearchParams, Link } from "react-router-dom";
 import api from "../api/index.js";
 
 /* Min datetime string for the date-picker (today) */
@@ -11,8 +10,6 @@ function todayMin() {
 }
 
 function BookingPage() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   /* Two ways in. ?instructor=<userId> is the driving-instructor path and the
@@ -43,12 +40,6 @@ function BookingPage() {
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-
-  /* Redirect if not a logged-in customer */
-  useEffect(() => {
-    if (user && user.role !== "user") navigate("/");
-    if (!user) navigate("/login");
-  }, [user, navigate]);
 
   useEffect(() => {
     if (!target) return undefined;

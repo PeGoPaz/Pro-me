@@ -74,11 +74,6 @@ function CustomerDashboardPage() {
     }
   };
 
-  if (!user) {
-    navigate("/login");
-    return null;
-  }
-
   const avatarUrl = profile?.avatarUrl || user.avatarUrl || "";
   const upcoming = bookings.filter((b) => b.status !== "cancelled" && new Date(b.bookingDate) >= new Date());
   const past = bookings.filter((b) => b.status === "cancelled" || new Date(b.bookingDate) < new Date());

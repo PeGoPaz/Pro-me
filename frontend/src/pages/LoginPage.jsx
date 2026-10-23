@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/index.js";
 
 function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  /* Set by RequireAuth when it sent someone here from a page that needs a
+     session, such as a booking link. */
+  const from = useLocation().state?.from;
 
   const [form, setForm] = useState({ email: "", password: "", remember: false });
   const [errors, setErrors] = useState({});
@@ -49,7 +52,7 @@ function LoginPage() {
         }
         navigate("/dashboard/provider");
       } else {
-        navigate("/dashboard/customer");
+        navigate(from ? from.pathname + from.search : "/dashboard/customer", { replace: Boolean(from) });
       }
     } catch (err) {
       const msg = err?.response?.data?.message || "Invalid email or password.";

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/index.js";
 import { resizePhotoToDataUrl } from "../utils/avatarImage";
@@ -25,7 +24,6 @@ const STATUS_LABELS = {
 
 function ProviderDashboardPage() {
   const { user, refreshUser } = useAuth();
-  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [services, setServices] = useState([]);
@@ -79,11 +77,6 @@ function ProviderDashboardPage() {
       alert("Failed to update booking status.");
     }
   };
-
-  if (!user) {
-    navigate("/login");
-    return null;
-  }
 
   const now = new Date();
   now.setHours(0, 0, 0, 0);
