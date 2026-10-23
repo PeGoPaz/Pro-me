@@ -20,14 +20,25 @@ function BookingPage() {
      by the Other category. Either resolves to the same "who am I booking". */
   const instructorId = searchParams.get("instructor");
   const serviceId = searchParams.get("service");
-  const [service, setService] = useState(null);
-  const [serviceLoading, setServiceLoading] = useState(true);
+  const target = instructorId ? `instructor:${instructorId}` : serviceId ? `service:${serviceId}` : null;
+
+  /* What was fetched, and for which target. Loading is derived from it rather
+     than kept in its own state: following a link to another instructor makes
+     the old result stale at once, instead of showing the previous instructor
+     until the new one arrives. */
+  const [fetched, setFetched] = useState({ target: null, service: null });
+  const serviceLoading = target !== null && fetched.target !== target;
+  const service = fetched.target === target ? fetched.service : null;
 
   const [form, setForm] = useState({
     bookingDate: "",
-    desiredPrice: "",
     notes: "",
   });
+  /* The desired price shows the listed price until the learner types in it.
+     An edit belongs to the instructor it was made for, so it does not carry
+     over to the next one; clearing the field keeps it cleared. */
+  const [priceEdit, setPriceEdit] = useState({ target: null, value: "" });
+  const desiredPrice = priceEdit.target === target ? priceEdit.value : service ? String(service.price) : "";
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -40,10 +51,7 @@ function BookingPage() {
   }, [user, navigate]);
 
   useEffect(() => {
-    if (!instructorId && !serviceId) {
-      setServiceLoading(false);
-      return undefined;
-    }
+    if (!target) return undefined;
 
     let ignore = false;
 
@@ -68,24 +76,16 @@ function BookingPage() {
         }));
 
     request
-      .then((normalised) => { if (!ignore) setService(normalised); })
-      .catch(() => { if (!ignore) setService(null); })
-      .finally(() => { if (!ignore) setServiceLoading(false); });
+      .then((normalised) => { if (!ignore) setFetched({ target, service: normalised }); })
+      .catch(() => { if (!ignore) setFetched({ target, service: null }); });
 
     return () => { ignore = true; };
-  }, [instructorId, serviceId]);
-
-  useEffect(() => {
-    if (!service) return;
-    setForm((prev) => ({
-      ...prev,
-      desiredPrice: prev.desiredPrice || String(service.price),
-    }));
-  }, [service]);
+  }, [target, instructorId, serviceId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    if (name === "desiredPrice") setPriceEdit({ target, value });
+    else setForm((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
@@ -95,14 +95,14 @@ function BookingPage() {
 
     const nextErrors = {};
     if (!form.bookingDate) nextErrors.bookingDate = "Please choose a date and time.";
-    if (!form.desiredPrice || Number(form.desiredPrice) <= 0)
+    if (!desiredPrice || Number(desiredPrice) <= 0)
       nextErrors.desiredPrice = "Enter a valid price.";
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
     /* Build notes — prepend desired price so provider can see it */
     const combinedNotes = [
-      `Desired price: €${form.desiredPrice}`,
+      `Desired price: €${desiredPrice}`,
       form.notes.trim() ? form.notes.trim() : null,
     ]
       .filter(Boolean)
@@ -250,7 +250,7 @@ function BookingPage() {
                   min="1"
                   step="1"
                   placeholder={String(service.price)}
-                  value={form.desiredPrice}
+                  value={desiredPrice}
                   onChange={handleChange}
                   className={`booking-input booking-input-price${errors.desiredPrice ? " booking-input-error" : ""}`}
                 />
