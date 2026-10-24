@@ -5,6 +5,16 @@ import InstructorProfile from "../models/InstructorProfile.js";
 import User from "../models/User.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { ratingStats, reviewStatsFor, visibleReviewsLookup } from "../utils/reviews.js";
+import { GALLERY_LIMIT, addToGallery, galleryFolder, removeFromGallery } from "../utils/gallery.js";
+import {
+  MAX_PHOTO_BYTES,
+  deletePhoto,
+  photoUpload,
+  publicIdFromUrl,
+  sniffImageType,
+  uploadPhoto,
+  uploadsConfigured,
+} from "../utils/photos.js";
 import { COUNTY_SLUGS } from "../data/counties.js";
 import { TEST_CENTRE_SLUGS } from "../data/testCentres.js";
 import {
@@ -191,6 +201,81 @@ router.get("/me", async (req, res) => {
   } catch (error) {
     console.error("Own profile fetch error:", error.message);
     return res.status(500).json({ message: "Failed to fetch your profile" });
+  }
+});
+
+/* ── POST /api/instructors/me/gallery — add one photo ──────────────────────
+   multipart/form-data with the file in "photo". */
+const receivePhoto = (req, res, next) => {
+  if (!uploadsConfigured()) {
+    return res.status(503).json({ message: "Photo uploads are not configured on this server" });
+  }
+  return photoUpload(req, res, (error) => {
+    if (error?.code === "LIMIT_FILE_SIZE") {
+      return res.status(413).json({ message: `A photo can be ${MAX_PHOTO_BYTES / 1024 / 1024} MB at most` });
+    }
+    if (error) {
+      return res.status(400).json({ message: 'Send one photo, as the "photo" field' });
+    }
+    return next();
+  });
+};
+
+router.post("/me/gallery", receivePhoto, async (req, res) => {
+  const userId = req.session.user.id;
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'Send one photo, as the "photo" field' });
+    }
+    if (!sniffImageType(req.file.buffer)) {
+      return res.status(415).json({ message: "Only JPEG, PNG and WebP photos can be uploaded" });
+    }
+
+    const profile = await InstructorProfile.findOne({ userId }).select("gallery").lean();
+    if (!profile) {
+      return res.status(404).json({ message: "Create your profile before adding photos" });
+    }
+    if (profile.gallery.length >= GALLERY_LIMIT) {
+      return res.status(409).json({ message: `Your gallery already has ${GALLERY_LIMIT} photos` });
+    }
+
+    const { url, publicId } = await uploadPhoto(req.file.buffer, { folder: galleryFolder(userId) });
+
+    const gallery = await addToGallery(userId, url);
+    if (!gallery) {
+      /* Another upload filled the last place while this one was in flight. */
+      await deletePhoto(publicId).catch(() => {});
+      return res.status(409).json({ message: `Your gallery already has ${GALLERY_LIMIT} photos` });
+    }
+
+    return res.status(201).json({ url, gallery });
+  } catch (error) {
+    console.error("Gallery upload error:", error.message);
+    return res.status(502).json({ message: "The photo could not be uploaded. Please try again." });
+  }
+});
+
+/* ── DELETE /api/instructors/me/gallery?url=… — remove one photo ───────── */
+router.delete("/me/gallery", async (req, res) => {
+  const userId = req.session.user.id;
+  try {
+    const url = String(req.query.url ?? "");
+    const gallery = await removeFromGallery(userId, url);
+    if (!gallery) {
+      return res.status(404).json({ message: "That photo is not in your gallery" });
+    }
+
+    /* Only our own uploads in this instructor's folder are deleted from
+       Cloudinary; anything else just leaves the gallery. */
+    const publicId = publicIdFromUrl(url);
+    if (publicId?.startsWith(`${galleryFolder(userId)}/`)) {
+      await deletePhoto(publicId).catch((error) => console.error("Cloudinary delete error:", error.message));
+    }
+
+    return res.json({ gallery });
+  } catch (error) {
+    console.error("Gallery delete error:", error.message);
+    return res.status(500).json({ message: "Failed to remove the photo" });
   }
 });
 
