@@ -1,20 +1,20 @@
 /*
  * Shrinks a chosen photo in the browser before it is uploaded.
  *
- * Avatars are stored as base64 inside the user document until a real upload
- * pipeline exists, and the server caps them at 2MB of base64 (~1.4MB of file).
- * A normal phone photo is 2–5MB, so without this most instructors uploading
- * from their phone — which is most instructors — were simply told their photo
- * was too large. The old client check also compared the *file* size against a
- * limit the server applies to the *encoded* size, so files between ~1.5MB and
- * 2MB passed here and then failed there with a generic error.
- *
- * Resizing to 512px on the longest side fixes both: any photo works, and it is
- * stored at roughly 50–100KB instead of megabytes.
+ * The server takes files up to 5 MB, and a photo straight off a phone is often
+ * larger. Redrawing it at a sensible size first means any photo works, and the
+ * upload is a few hundred kilobytes rather than megabytes over mobile data.
+ * Drawing through a canvas also leaves the photo's EXIF block behind - GPS
+ * position included - before anything leaves the device; Cloudinary strips it
+ * again on its side.
  */
 
-const MAX_SIDE = 512;
 const JPEG_QUALITY = 0.85;
+
+/* Longest side, in pixels, for each kind of photo. Cloudinary makes the final
+   size; these only keep the upload small. */
+export const AVATAR_SIDE = 800;
+export const GALLERY_SIDE = 2048;
 
 const loadImage = (file) =>
   new Promise((resolve, reject) => {
@@ -33,14 +33,14 @@ const loadImage = (file) =>
     img.src = url;
   });
 
-/* Returns a JPEG data URL no larger than MAX_SIDE on its longest side. */
-export async function resizePhotoToDataUrl(file) {
+/* Returns a JPEG Blob no larger than maxSide on its longest side. */
+export async function resizePhoto(file, maxSide) {
   if (!file || !file.type?.startsWith("image/")) {
     throw new Error("Please choose an image file.");
   }
 
   const img = await loadImage(file);
-  const scale = Math.min(1, MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+  const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
   const width = Math.max(1, Math.round(img.naturalWidth * scale));
   const height = Math.max(1, Math.round(img.naturalHeight * scale));
 
@@ -54,5 +54,11 @@ export async function resizePhotoToDataUrl(file) {
   ctx.fillRect(0, 0, width, height);
   ctx.drawImage(img, 0, 0, width, height);
 
-  return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error("That photo could not be prepared for upload."))),
+      "image/jpeg",
+      JPEG_QUALITY
+    );
+  });
 }

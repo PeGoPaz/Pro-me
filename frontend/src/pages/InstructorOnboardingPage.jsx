@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import api from "../api/index.js";
 import { useAuth } from "../context/auth";
-import { resizePhotoToDataUrl } from "../utils/avatarImage";
+import { uploadAvatar } from "../api/photos.js";
 import { formatIrishPhone } from "../utils/formatPhone";
 import {
   StepAbout,
@@ -246,8 +246,7 @@ function InstructorOnboardingPage() {
   const handleAvatarUpload = async (file) => {
     setAvatarState({ uploading: true, error: "" });
     try {
-      const avatarUrl = await resizePhotoToDataUrl(file);
-      await api.patch("/auth/me/avatar", { avatarUrl });
+      await uploadAvatar(file);
       await refreshUser();
       setAvatarState({ uploading: false, error: "" });
     } catch (err) {

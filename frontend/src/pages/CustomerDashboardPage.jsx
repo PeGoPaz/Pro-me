@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/auth";
 import api from "../api/index.js";
-import { resizePhotoToDataUrl } from "../utils/avatarImage";
+import { uploadAvatar } from "../api/photos.js";
 import { formatDate } from "../utils/formatDate";
 import DashboardAvatar from "../components/DashboardAvatar";
 
@@ -50,10 +50,7 @@ function CustomerDashboardPage() {
     setAvatarError("");
     try {
       setAvatarUploading(true);
-      /* Resized in the browser first, so a full-size phone photo works. */
-      const avatarUrl = await resizePhotoToDataUrl(file);
-      const res = await api.patch("/auth/me/avatar", { avatarUrl });
-      setProfile(res.data.user);
+      setProfile(await uploadAvatar(file));
       await refreshUser();
     } catch (err) {
       setAvatarError(
