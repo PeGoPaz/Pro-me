@@ -6,15 +6,7 @@ import User from "../models/User.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { ratingStats, reviewStatsFor, visibleReviewsLookup } from "../utils/reviews.js";
 import { GALLERY_LIMIT, addToGallery, checkPhotoEdits, galleryFolder, removeFromGallery } from "../utils/gallery.js";
-import {
-  MAX_PHOTO_BYTES,
-  deletePhoto,
-  photoUpload,
-  publicIdFromUrl,
-  sniffImageType,
-  uploadPhoto,
-  uploadsConfigured,
-} from "../utils/photos.js";
+import { GALLERY_PHOTO, deletePhoto, publicIdFromUrl, receivePhoto, uploadPhoto } from "../utils/photos.js";
 import { COUNTY_SLUGS } from "../data/counties.js";
 import { TEST_CENTRE_SLUGS } from "../data/testCentres.js";
 import {
@@ -205,31 +197,9 @@ router.get("/me", async (req, res) => {
 
 /* ── POST /api/instructors/me/gallery — add one photo ──────────────────────
    multipart/form-data with the file in "photo". */
-const receivePhoto = (req, res, next) => {
-  if (!uploadsConfigured()) {
-    return res.status(503).json({ message: "Photo uploads are not configured on this server" });
-  }
-  return photoUpload(req, res, (error) => {
-    if (error?.code === "LIMIT_FILE_SIZE") {
-      return res.status(413).json({ message: `A photo can be ${MAX_PHOTO_BYTES / 1024 / 1024} MB at most` });
-    }
-    if (error) {
-      return res.status(400).json({ message: 'Send one photo, as the "photo" field' });
-    }
-    return next();
-  });
-};
-
 router.post("/me/gallery", receivePhoto, async (req, res) => {
   const userId = req.session.user.id;
   try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'Send one photo, as the "photo" field' });
-    }
-    if (!sniffImageType(req.file.buffer)) {
-      return res.status(415).json({ message: "Only JPEG, PNG and WebP photos can be uploaded" });
-    }
-
     const profile = await InstructorProfile.findOne({ userId }).select("gallery").lean();
     if (!profile) {
       return res.status(404).json({ message: "Create your profile before adding photos" });
@@ -238,7 +208,7 @@ router.post("/me/gallery", receivePhoto, async (req, res) => {
       return res.status(409).json({ message: `Your gallery already has ${GALLERY_LIMIT} photos` });
     }
 
-    const { url, publicId } = await uploadPhoto(req.file.buffer, { folder: galleryFolder(userId) });
+    const { url, publicId } = await uploadPhoto(req.file.buffer, { folder: galleryFolder(userId), ...GALLERY_PHOTO });
 
     const gallery = await addToGallery(userId, url);
     if (!gallery) {

@@ -8,6 +8,7 @@ import Enterprise from "../models/Enterprise.js";
 import Favorite from "../models/Favorite.js";
 import InstructorProfile from "../models/InstructorProfile.js";
 import { requireAuth } from "../middleware/auth.js";
+import { AVATAR, deletePhoto, publicIdFromUrl, receivePhoto, uploadPhoto } from "../utils/photos.js";
 
 const router = express.Router();
 
@@ -231,6 +232,50 @@ router.patch("/me/avatar", requireAuth, async (req, res) => {
   } catch (error) {
     console.error("Avatar update error:", error.message);
     return res.status(500).json({ message: "Failed to update avatar" });
+  }
+});
+
+/* Where a user's avatar lives on Cloudinary. */
+const avatarFolder = (userId) => `pro-me/avatars/${userId}`;
+
+/* ── POST /api/auth/me/avatar — upload a new avatar ───────────────────────
+   multipart/form-data with the file in "photo". Replaces the previous upload
+   in place, so nothing is left behind on Cloudinary. */
+router.post("/me/avatar", requireAuth, receivePhoto, async (req, res) => {
+  const userId = req.session.user.id;
+  try {
+    const { url } = await uploadPhoto(req.file.buffer, { folder: avatarFolder(userId), ...AVATAR });
+    const user = await User.findByIdAndUpdate(userId, { avatarUrl: url }, { new: true }).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    req.session.user.avatarUrl = user.avatarUrl;
+    return res.status(201).json({ user });
+  } catch (error) {
+    console.error("Avatar upload error:", error.message);
+    return res.status(502).json({ message: "The photo could not be uploaded. Please try again." });
+  }
+});
+
+/* ── DELETE /api/auth/me/avatar — back to the initials placeholder ──────── */
+router.delete("/me/avatar", requireAuth, async (req, res) => {
+  const userId = req.session.user.id;
+  try {
+    const before = await User.findById(userId).select("avatarUrl").lean();
+    if (!before) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const user = await User.findByIdAndUpdate(userId, { avatarUrl: "" }, { new: true }).select("-password");
+    req.session.user.avatarUrl = "";
+
+    const publicId = publicIdFromUrl(before.avatarUrl);
+    if (publicId?.startsWith(`${avatarFolder(userId)}/`)) {
+      await deletePhoto(publicId).catch((error) => console.error("Cloudinary delete error:", error.message));
+    }
+    return res.json({ user });
+  } catch (error) {
+    console.error("Avatar delete error:", error.message);
+    return res.status(500).json({ message: "Failed to remove the avatar" });
   }
 });
 

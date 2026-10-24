@@ -2,7 +2,8 @@ import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
 
 /*
- * Photo uploads: instructors' gallery photos, stored on Cloudinary.
+ * Photo uploads: instructors' gallery photos and everyone's avatar, stored on
+ * Cloudinary.
  *
  * The browser sends the file as multipart/form-data. It stays in memory - 5 MB
  * at most - and its type is read from its first bytes, not from the name or
@@ -10,7 +11,8 @@ import multer from "multer";
  * JPEG, PNG and WebP pass; SVG in particular never does, since it can carry
  * script.
  *
- * Cloudinary re-encodes every upload (longest side 1600 px). Re-encoding is
+ * Cloudinary re-encodes every upload (a gallery photo to at most 1600 px, an
+ * avatar to a 400 px square around the face). Re-encoding is
  * also what drops the EXIF block, and with it the GPS position a phone writes
  * into each photo - for an instructor photographing the car outside their
  * home, that is their address.
@@ -21,7 +23,7 @@ import multer from "multer";
 
 export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
-export const photoUpload = multer({
+const photoUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: MAX_PHOTO_BYTES, files: 1 },
 }).single("photo");
@@ -41,6 +43,35 @@ export const sniffImageType = (buffer) => {
 
 export const uploadsConfigured = () => Boolean(process.env.CLOUDINARY_URL);
 
+/* Express middleware for a route taking one photo in the "photo" field of a
+   multipart/form-data body: answers 503, 413, 400 or 415 itself, and otherwise
+   leaves a checked image in req.file. */
+export const receivePhoto = (req, res, next) => {
+  if (!uploadsConfigured()) {
+    return res.status(503).json({ message: "Photo uploads are not configured on this server" });
+  }
+  return photoUpload(req, res, (error) => {
+    if (error?.code === "LIMIT_FILE_SIZE") {
+      return res.status(413).json({ message: `A photo can be ${MAX_PHOTO_BYTES / 1024 / 1024} MB at most` });
+    }
+    if (error || !req.file) {
+      return res.status(400).json({ message: 'Send one photo, as the "photo" field' });
+    }
+    if (!sniffImageType(req.file.buffer)) {
+      return res.status(415).json({ message: "Only JPEG, PNG and WebP photos can be uploaded" });
+    }
+    return next();
+  });
+};
+
+export const GALLERY_PHOTO = { transformation: [{ width: 1600, height: 1600, crop: "limit", quality: "auto" }] };
+/* Always the same public id, overwritten: a new avatar replaces the old file
+   instead of leaving it behind, and its URL still changes with the version. */
+export const AVATAR = {
+  publicId: "avatar",
+  transformation: [{ width: 400, height: 400, crop: "fill", gravity: "auto", quality: "auto" }],
+};
+
 /* The SDK reads CLOUDINARY_URL itself; this only asks for https URLs back. */
 let configured = false;
 const client = () => {
@@ -51,13 +82,15 @@ const client = () => {
   return cloudinary;
 };
 
-/* Uploads one photo and returns { url, publicId }. */
-export const uploadPhoto = async (buffer, { folder }) => {
+/* Uploads one photo into `folder` - GALLERY_PHOTO or AVATAR decides its size
+   and name - and returns { url, publicId }. */
+export const uploadPhoto = async (buffer, { folder, publicId, transformation }) => {
   const type = sniffImageType(buffer);
   const result = await client().uploader.upload(`data:${type};base64,${buffer.toString("base64")}`, {
     folder,
     resource_type: "image",
-    transformation: [{ width: 1600, height: 1600, crop: "limit", quality: "auto" }],
+    transformation,
+    ...(publicId ? { public_id: publicId, overwrite: true, invalidate: true } : {}),
   });
   return { url: result.secure_url, publicId: result.public_id };
 };
