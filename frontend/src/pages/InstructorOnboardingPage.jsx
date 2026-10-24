@@ -2,10 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import api from "../api/index.js";
 import { useAuth } from "../context/auth";
-import { uploadAvatar } from "../api/photos.js";
+import { GALLERY_LIMIT, removeGalleryPhoto, uploadAvatar, uploadGalleryPhoto } from "../api/photos.js";
 import { formatIrishPhone } from "../utils/formatPhone";
 import {
   StepAbout,
+  StepMedia,
   StepBasics,
   StepCoverage,
   StepReview,
@@ -30,8 +31,12 @@ const STEPS = [
   { key: "coverage", title: "Where you teach", intro: "Counties first, then the test centres you know." },
   { key: "teaching", title: "What you teach", intro: "Exactly as it appears on your ADI permit." },
   { key: "about", title: "About you", intro: "What makes a learner pick you over the next name." },
+  { key: "media", title: "Photos", intro: "Your car, where lessons start, you at work. Optional." },
   { key: "review", title: "Review and publish", intro: "Check everything, then go live." },
 ];
+
+/* Steps are found by key, so adding one never shifts another's links. */
+const STEP_INDEX = Object.fromEntries(STEPS.map((s, index) => [s.key, index]));
 
 const EMPTY_DRAFT = {
   adiNumber: "",
@@ -47,6 +52,8 @@ const EMPTY_DRAFT = {
   acceptingNewStudents: true,
   declarations: { adiConfirmed: false, holdsInsurance: false },
   isPublished: false,
+  gallery: [],
+  profilePhotoUrl: "",
 };
 
 /* Server profile → editable draft. */
@@ -67,17 +74,20 @@ const toDraft = (profile) => ({
     holdsInsurance: Boolean(profile.declarations?.holdsInsuranceAt),
   },
   isPublished: Boolean(profile.isPublished),
+  gallery: profile.gallery ?? [],
+  profilePhotoUrl: profile.profilePhotoUrl ?? "",
 });
 
-/* Where to reopen: the first step that still has a gap. */
+/* Where to reopen: the first step that still has a gap. Photos are optional,
+   so they never hold anyone back from review. */
 const firstIncompleteStep = (profile) => {
-  if (!profile) return 0;
-  if (profile.isPublished) return 4;
-  if (!profile.adiNumber || !profile.phone) return 0;
-  if (!profile.counties?.length) return 1;
-  if (!profile.licenceCategories?.length) return 2;
-  if (!profile.bio) return 3;
-  return 4;
+  if (!profile) return STEP_INDEX.basics;
+  if (profile.isPublished) return STEP_INDEX.review;
+  if (!profile.adiNumber || !profile.phone) return STEP_INDEX.basics;
+  if (!profile.counties?.length) return STEP_INDEX.coverage;
+  if (!profile.licenceCategories?.length) return STEP_INDEX.teaching;
+  if (!profile.bio) return STEP_INDEX.about;
+  return STEP_INDEX.review;
 };
 
 /* What each step sends. Only its own fields, so a step never overwrites
@@ -135,6 +145,7 @@ function InstructorOnboardingPage() {
   const [blockers, setBlockers] = useState([]);
   const [userId, setUserId] = useState(null);
   const [avatarState, setAvatarState] = useState({ uploading: false, error: "" });
+  const [mediaState, setMediaState] = useState({ busy: "", error: "" });
 
   const isInstructor = user?.role === "enterprise" && user?.providerType === "driving_instructor";
 
@@ -201,6 +212,11 @@ function InstructorOnboardingPage() {
 
   const handleNext = async () => {
     const key = STEPS[step].key;
+    /* Each photo is saved as it is added or removed; nothing left to send. */
+    if (key === "media") {
+      goTo(step + 1);
+      return;
+    }
     const problem = clientCheck(key, draft);
     if (problem) {
       setError(problem);
@@ -254,6 +270,42 @@ function InstructorOnboardingPage() {
         uploading: false,
         error: err?.response?.data?.message || err?.message || "Could not upload the photo.",
       });
+    }
+  };
+
+  /* One upload at a time, in the order chosen, and no more than still fit. */
+  const handleAddPhotos = async (files) => {
+    const room = GALLERY_LIMIT - draft.gallery.length;
+    const batch = files.slice(0, room);
+    for (let index = 0; index < batch.length; index++) {
+      setMediaState({ busy: `Uploading ${index + 1} of ${batch.length}…`, error: "" });
+      try {
+        setField("gallery", await uploadGalleryPhoto(batch[index]));
+      } catch (err) {
+        setMediaState({
+          busy: "",
+          error: err?.response?.data?.message || err?.message || "Could not upload the photo.",
+        });
+        return;
+      }
+    }
+    setMediaState({
+      busy: "",
+      error: files.length > room
+        ? `Only ${room} more ${room === 1 ? "photo fits" : "photos fit"}; the rest were left out.`
+        : "",
+    });
+  };
+
+  const handleRemovePhoto = async (url) => {
+    setMediaState({ busy: "Removing…", error: "" });
+    try {
+      setField("gallery", await removeGalleryPhoto(url));
+      /* The server stops using it as the profile photo too. */
+      setField("profilePhotoUrl", (current) => (current === url ? "" : current));
+      setMediaState({ busy: "", error: "" });
+    } catch (err) {
+      setMediaState({ busy: "", error: err?.response?.data?.message || "Could not remove the photo." });
     }
   };
 
@@ -322,10 +374,16 @@ function InstructorOnboardingPage() {
           {current.key === "coverage" && <StepCoverage {...stepProps} />}
           {current.key === "teaching" && <StepTeaching {...stepProps} />}
           {current.key === "about" && <StepAbout {...stepProps} />}
+          {current.key === "media" && (
+            <StepMedia
+              {...stepProps}
+              media={{ ...mediaState, onAdd: handleAddPhotos, onRemove: handleRemovePhoto }}
+            />
+          )}
           {current.key === "review" && (
             <StepReview
               {...stepProps}
-              onEdit={goTo}
+              onEdit={(key) => goTo(STEP_INDEX[key])}
               blockers={blockers}
               published={draft.isPublished}
               userId={userId}
@@ -341,8 +399,13 @@ function InstructorOnboardingPage() {
           )}
 
           {current.key !== "review" && (
-            <button type="button" className="button button-primary" onClick={handleNext} disabled={saving}>
-              {saving ? "Saving…" : "Save and continue"}
+            <button
+              type="button"
+              className="button button-primary"
+              onClick={handleNext}
+              disabled={saving || Boolean(mediaState.busy)}
+            >
+              {saving ? "Saving…" : current.key === "media" ? "Continue" : "Save and continue"}
             </button>
           )}
 

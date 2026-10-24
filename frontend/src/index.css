@@ -4815,6 +4815,64 @@ details[open] .contact-faq-q::after {
   accent-color: var(--primary);
 }
 
+/* Onboarding photos */
+.ob-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 0.6rem;
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0;
+}
+
+.ob-gallery-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f1f2f6;
+}
+
+.ob-gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ob-gallery-remove {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  width: 1.9rem;
+  height: 1.9rem;
+  border: none;
+  border-radius: 50%;
+  background: rgba(15, 18, 30, 0.72);
+  color: #fff;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ob-gallery-remove:hover,
+.ob-gallery-remove:focus-visible {
+  background: #b42318;
+}
+
+.ob-gallery-remove:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.ob-gallery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
 .ob-summary {
   margin: 0;
   border: 1px solid #eef0f6;

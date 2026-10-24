@@ -1,15 +1,13 @@
+import { useRef } from "react";
 import { Link } from "react-router-dom";
 import ChipGroup from "./ChipGroup";
+import { GALLERY_LIMIT } from "../../api/photos.js";
 import DashboardAvatar from "../DashboardAvatar";
 import { formatIrishPhone } from "../../utils/formatPhone";
 
 /*
- * The five steps of instructor onboarding. Each is purely presentational: the
+ * The six steps of instructor onboarding. Each is purely presentational: the
  * page owns the draft, saving and navigation.
- *
- * The roadmap lists a sixth step, Media (gallery photos), between About and
- * Review. It is left out until photo uploads exist — a step that cannot do
- * anything would only confuse people.
  */
 
 const toggle = (list, value) =>
@@ -264,25 +262,91 @@ export function StepAbout({ draft, setField }) {
   );
 }
 
-/* ── 5. Review and publish ───────────────────────────────────────────────── */
+/* ── 5. Photos ────────────────────────────────────────────────────────────
+   Optional. Each photo is uploaded or removed the moment it is chosen. */
+export function StepMedia({ draft, media }) {
+  const input = useRef(null);
+  const count = draft.gallery.length;
+  const full = count >= GALLERY_LIMIT;
+
+  return (
+    <>
+      <p className="ob-help">
+        The car learners will drive, where lessons usually start, you teaching.
+        Profiles with photos look like someone real is behind them. JPEG, PNG or
+        WebP; location data is removed from every photo.
+      </p>
+
+      {count > 0 && (
+        <ul className="ob-gallery">
+          {draft.gallery.map((url, index) => (
+            <li key={url} className="ob-gallery-item">
+              <img src={url} alt={`Photo ${index + 1}`} loading="lazy" />
+              <button
+                type="button"
+                className="ob-gallery-remove"
+                onClick={() => media.onRemove(url)}
+                disabled={Boolean(media.busy)}
+                aria-label={`Remove photo ${index + 1}`}
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="ob-gallery-actions">
+        <input
+          ref={input}
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          onChange={(e) => {
+            const files = [...e.target.files];
+            e.target.value = "";
+            if (files.length) media.onAdd(files);
+          }}
+        />
+        <button
+          type="button"
+          className="button button-ghost"
+          onClick={() => input.current?.click()}
+          disabled={full || Boolean(media.busy)}
+        >
+          {full ? "Gallery full" : "Add photos"}
+        </button>
+        <span className="ob-help" role="status">
+          {media.busy || `${count} of ${GALLERY_LIMIT} photos`}
+        </span>
+      </div>
+
+      {media.error && <div className="report-error" role="alert">{media.error}</div>}
+    </>
+  );
+}
+
+/* ── 6. Review and publish ───────────────────────────────────────────────── */
 export function StepReview({ draft, setField, reference, user, onEdit, blockers, published, userId }) {
   const names = (slugs, list, key = "slug") =>
     slugs.map((s) => list.find((item) => item[key] === s)?.name ?? s).join(", ") || "—";
 
   const rows = [
-    { step: 0, label: "ADI number", value: draft.adiNumber || "—" },
-    { step: 0, label: "Phone", value: draft.phone ? formatIrishPhone(draft.phone) : "—" },
-    { step: 1, label: "Counties", value: names(draft.counties, reference.counties) },
-    { step: 1, label: "Test centres", value: names(draft.testCentres, reference.testCentres) },
-    { step: 2, label: "Categories", value: draft.licenceCategories.join(", ") || "—" },
+    { step: "basics", label: "ADI number", value: draft.adiNumber || "—" },
+    { step: "basics", label: "Phone", value: draft.phone ? formatIrishPhone(draft.phone) : "—" },
+    { step: "coverage", label: "Counties", value: names(draft.counties, reference.counties) },
+    { step: "coverage", label: "Test centres", value: names(draft.testCentres, reference.testCentres) },
+    { step: "teaching", label: "Categories", value: draft.licenceCategories.join(", ") || "—" },
     {
-      step: 2,
+      step: "teaching",
       label: "Transmission",
       value: draft.transmission.map((t) => (t === "automatic" ? "Automatic" : "Manual")).join(", ") || "—",
     },
-    { step: 3, label: "Headline", value: draft.headline || "—" },
-    { step: 3, label: "Price", value: draft.pricePerLesson !== "" ? `€${draft.pricePerLesson}` : "—" },
-    { step: 3, label: "Lessons taught", value: draft.lessonsDone ? `${draft.lessonsDone} (self-reported)` : "—" },
+    { step: "about", label: "Headline", value: draft.headline || "—" },
+    { step: "about", label: "Price", value: draft.pricePerLesson !== "" ? `€${draft.pricePerLesson}` : "—" },
+    { step: "about", label: "Lessons taught", value: draft.lessonsDone ? `${draft.lessonsDone} (self-reported)` : "—" },
+    { step: "media", label: "Photos", value: draft.gallery.length ? `${draft.gallery.length} of ${GALLERY_LIMIT}` : "None yet (optional)" },
   ];
 
   return (
