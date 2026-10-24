@@ -1743,6 +1743,24 @@ h1 {
 }
 
 /* Empty / loading states */
+.dash-review-comment {
+  margin-top: 0.6rem;
+  font-style: italic;
+  color: #555;
+}
+
+.dash-review-hidden {
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-left: 3px solid #b42318;
+  border-radius: 6px;
+  background: #fff5f4;
+  color: #3a1d1a;
+  font-size: 0.9rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
 .dash-empty {
   display: flex;
   flex-direction: column;

@@ -3,8 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/auth";
 import api from "../api/index.js";
 import { uploadAvatar } from "../api/photos.js";
-import { formatDate } from "../utils/formatDate";
+import { formatDate, formatShortDate } from "../utils/formatDate";
 import DashboardAvatar from "../components/DashboardAvatar";
+import { StarDisplay } from "../components/StarRating";
 
 const STATUS_CLASSES = {
   pending: "booking-status-pending",
@@ -36,6 +37,7 @@ function CustomerDashboardPage() {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState("");
   const [avatarPreviewOpen, setAvatarPreviewOpen] = useState(false);
+  const [myReviews, setMyReviews] = useState([]);
 
   useEffect(() => {
     if (!user) return;
@@ -44,6 +46,7 @@ function CustomerDashboardPage() {
       .then((res) => setBookings(res.data))
       .catch(() => setError("Could not load bookings."))
       .finally(() => setLoadingBookings(false));
+    api.get("/reviews/mine").then((res) => setMyReviews(res.data.reviews)).catch(() => {});
   }, [user]);
 
   const handleAvatarUpload = async (file) => {
@@ -179,6 +182,53 @@ function CustomerDashboardPage() {
                   <button className="dash-cancel-btn" onClick={() => handleCancel(b._id)}>
                     Cancel booking
                   </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* The learner's own reviews. A hidden one says why: DSA Article 17 owes
+          its author the decision and the reasons, and a way to contest it. */}
+      {myReviews.length > 0 && (
+        <section className="dash-section">
+          <h2 className="dash-section-title">Your Reviews</h2>
+          <ul className="dash-booking-list">
+            {myReviews.map((r) => (
+              <li key={r._id} className={`dash-booking-card ${r.hidden ? "dash-booking-card-muted" : ""}`}>
+                <div className="dash-booking-top">
+                  <div>
+                    <p className="dash-booking-service">
+                      {r.instructor ? (
+                        <Link to={`/instructors/${r.instructor.id}`} className="dash-booking-service-link">
+                          {r.instructor.name}
+                        </Link>
+                      ) : (
+                        "Instructor no longer on Pro.me"
+                      )}
+                    </p>
+                    <p className="dash-booking-date">{formatShortDate(r.createdAt)}</p>
+                  </div>
+                  {r.hidden ? (
+                    <span className="booking-status booking-status-cancelled">Hidden</span>
+                  ) : (
+                    <StarDisplay rating={r.rating} size={14} />
+                  )}
+                </div>
+                {r.comment && <p className="dash-review-comment">“{r.comment}”</p>}
+                {r.hidden && (
+                  <div className="dash-review-hidden">
+                    <p>
+                      <strong>Hidden on {formatShortDate(r.hiddenAt)} after a report.</strong>{" "}
+                      It no longer shows on the instructor&apos;s profile or counts in their rating.
+                    </p>
+                    <p>Our reasons: {r.hiddenReason}</p>
+                    <p>
+                      If you think this decision is wrong,{" "}
+                      <Link to="/contact" className="legal-link">tell us</Link> and we will look at it again.
+                    </p>
+                  </div>
                 )}
               </li>
             ))}
