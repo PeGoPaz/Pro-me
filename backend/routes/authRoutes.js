@@ -189,52 +189,6 @@ router.get("/me", requireAuth, async (req, res) => {
   }
 });
 
-router.patch("/me/avatar", requireAuth, async (req, res) => {
-  try {
-    const { avatarUrl } = req.body;
-
-    if (avatarUrl !== null && typeof avatarUrl !== "string") {
-      return res.status(400).json({ message: "avatarUrl must be a string or null" });
-    }
-
-    const trimmedAvatar = typeof avatarUrl === "string" ? avatarUrl.trim() : "";
-    
-    // Validate data URL format more strictly
-    if (trimmedAvatar) {
-      if (!trimmedAvatar.startsWith("data:image/")) {
-        return res.status(400).json({ message: "avatarUrl must be a valid image data URL" });
-      }
-      
-      // Only allow specific image types
-      const allowedTypes = ["data:image/png", "data:image/jpeg", "data:image/jpg", "data:image/webp"];
-      if (!allowedTypes.some(type => trimmedAvatar.startsWith(type))) {
-        return res.status(400).json({ message: "Only PNG, JPEG, and WebP images are allowed" });
-      }
-    }
-    
-    if (trimmedAvatar.length > 2_000_000) { // Reduced from 4MB to 2MB
-      return res.status(400).json({ message: "Avatar image is too large (max 2MB)" });
-    }
-
-    const user = await User.findByIdAndUpdate(
-      req.session.user.id,
-      { avatarUrl: trimmedAvatar },
-      { new: true, runValidators: true }
-    ).select("-password");
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    req.session.user.avatarUrl = user.avatarUrl || "";
-
-    return res.status(200).json({ user });
-  } catch (error) {
-    console.error("Avatar update error:", error.message);
-    return res.status(500).json({ message: "Failed to update avatar" });
-  }
-});
-
 /* Where a user's avatar lives on Cloudinary. */
 const avatarFolder = (userId) => `pro-me/avatars/${userId}`;
 

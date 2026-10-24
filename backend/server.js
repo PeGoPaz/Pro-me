@@ -120,7 +120,9 @@ const generalLimiter = rateLimit({
 app.use('/api', generalLimiter);
 
 
-app.use(express.json({ limit: '5mb' }));
+// JSON bodies are form fields now - the longest is 2,000 characters. The 5 MB
+// limit was for base64 avatars, which go to Cloudinary as files instead.
+app.use(express.json({ limit: '100kb' }));
 
 // Security: Strip Mongo operators from input to prevent NoSQL injection.
 // Registered after express.json() so req.body is already parsed.

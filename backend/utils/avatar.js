@@ -1,17 +1,16 @@
 /*
- * Avatars are still stored as base64 data URLs inside the User document (up to
- * 2MB each) until the upload pipeline exists. Storing them that way is
- * tolerable; *sending* them that way is not. Embedded in JSON, a single avatar
- * turned the search response from a few kilobytes into ~1.5MB, and a page of
- * twenty instructors would be ~30MB — refetched on every filter change, mostly
- * over mobile data.
+ * New avatars are uploaded to Cloudinary and stored as their https URL. Older
+ * accounts may still hold one as a base64 data URL inside the User document,
+ * from before uploads existed; nothing writes those any more, but they are
+ * still served.
  *
- * So the API never ships the data URL to anyone but its owner. Everywhere else
- * it becomes a short link to GET /api/users/:id/avatar, which decodes the image
- * once and lets the browser cache it.
+ * A data URL is never shipped inside JSON to anyone but its owner: embedded,
+ * one avatar turned the search response from a few kilobytes into ~1.5MB.
+ * Everywhere else it becomes a short link to GET /api/users/:id/avatar, which
+ * decodes it once and lets the browser cache it. An https URL passes through.
  */
 
-/* The image types the upload endpoint accepts. Re-checked on the way out so a
+/* The image types the old endpoint accepted. Re-checked on the way out so a
    stored value can never be served as something executable, e.g. SVG. */
 const SERVABLE_TYPES = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp"]);
 
@@ -26,7 +25,7 @@ export const avatarPath = (userId, updatedAt) => {
 export const publicAvatarUrl = (user) => {
   const value = user?.avatarUrl;
   if (!value || typeof value !== "string") return "";
-  /* Already a real URL (what Cloudinary uploads will produce) — pass through. */
+  /* A Cloudinary upload — pass through. */
   if (value.startsWith("https://")) return value;
   if (value.startsWith("data:") && user._id) return avatarPath(user._id, user.updatedAt);
   return "";
