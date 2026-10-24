@@ -8,6 +8,7 @@ import User from "../models/User.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { VERIFICATION_DECISIONS, verificationUpdate } from "../utils/instructorRules.js";
 import { hideReview } from "../utils/reviews.js";
+import { transparencyReport } from "../utils/transparency.js";
 
 const router = express.Router();
 
@@ -211,11 +212,30 @@ router.patch("/reports/:id", async (req, res) => {
     if (hide === true && report.targetType === "review" && status === "actioned") {
       hidden = await hideReview(report.targetId, { reason: report.statementOfReasons, reportId: report._id });
     }
+    if (unpublished || hidden) {
+      report.contentAction = unpublished ? "unpublished_profile" : "hidden_review";
+      await report.save();
+    }
 
     return res.json({ message: "Report updated", report, unpublished, hidden });
   } catch (error) {
     console.error("Admin report update error:", error.message);
     return res.status(500).json({ message: "Failed to update the report" });
+  }
+});
+
+/* GET /api/admin/transparency?year=2026 — the year's moderation numbers. */
+router.get("/transparency", async (req, res) => {
+  try {
+    const thisYear = new Date().getUTCFullYear();
+    const year = req.query.year === undefined ? thisYear : Number(req.query.year);
+    if (!Number.isInteger(year) || year < 2026 || year > thisYear) {
+      return res.status(400).json({ message: `year must be between 2026 and ${thisYear}` });
+    }
+    return res.json(await transparencyReport(year));
+  } catch (error) {
+    console.error("Transparency report error:", error.message);
+    return res.status(500).json({ message: "Failed to build the transparency report" });
   }
 });
 

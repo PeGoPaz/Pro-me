@@ -82,6 +82,15 @@ const reportSchema = new mongoose.Schema(
       maxlength: 2000,
       default: "",
     },
+    /* What was done to the content, when anything was: the report closed as
+       actioned can also have taken a profile off the listing or hidden a
+       review. Kept here so the transparency report can count it. */
+    contentAction: {
+      type: String,
+      enum: ["unpublished_profile", "hidden_review"],
+      default: null,
+    },
+
     /* Article 18: set when we escalate a suspected criminal offence. */
     referredToAuthoritiesAt: { type: Date, default: null },
 
