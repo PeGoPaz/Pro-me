@@ -263,7 +263,8 @@ export function StepAbout({ draft, setField }) {
 }
 
 /* ── 5. Photos ────────────────────────────────────────────────────────────
-   Optional. Each photo is uploaded or removed the moment it is chosen. */
+   Optional. Every change is saved the moment it is made. Reordering uses
+   buttons rather than dragging, which works from a keyboard and on a phone. */
 export function StepMedia({ draft, media }) {
   const input = useRef(null);
   const count = draft.gallery.length;
@@ -274,7 +275,8 @@ export function StepMedia({ draft, media }) {
       <p className="ob-help">
         The car learners will drive, where lessons usually start, you teaching.
         Profiles with photos look like someone real is behind them. JPEG, PNG or
-        WebP; location data is removed from every photo.
+        WebP; location data is removed from every photo. The first photo leads
+        your gallery, and the starred one replaces your avatar on your profile.
       </p>
 
       {count > 0 && (
@@ -291,6 +293,34 @@ export function StepMedia({ draft, media }) {
               >
                 ×
               </button>
+              <div className="ob-gallery-tools">
+                <button
+                  type="button"
+                  onClick={() => media.onMove(index, -1)}
+                  disabled={index === 0 || Boolean(media.busy)}
+                  aria-label={`Move photo ${index + 1} earlier`}
+                >
+                  ←
+                </button>
+                <button
+                  type="button"
+                  className={draft.profilePhotoUrl === url ? "is-on" : ""}
+                  onClick={() => media.onChooseProfile(url)}
+                  disabled={Boolean(media.busy)}
+                  aria-pressed={draft.profilePhotoUrl === url}
+                  aria-label={`Use photo ${index + 1} as your profile photo`}
+                >
+                  ★
+                </button>
+                <button
+                  type="button"
+                  onClick={() => media.onMove(index, 1)}
+                  disabled={index === count - 1 || Boolean(media.busy)}
+                  aria-label={`Move photo ${index + 1} later`}
+                >
+                  →
+                </button>
+              </div>
             </li>
           ))}
         </ul>

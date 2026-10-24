@@ -309,6 +309,30 @@ function InstructorOnboardingPage() {
     }
   };
 
+  /* Reordering and choosing the profile photo go through PUT /me, which only
+     accepts photos already in the gallery. Saved straight away, like uploads. */
+  const savePhotoChange = async (payload, busyLabel) => {
+    setMediaState({ busy: busyLabel, error: "" });
+    try {
+      await save(payload);
+      setMediaState({ busy: "", error: "" });
+    } catch (err) {
+      setMediaState({ busy: "", error: err?.response?.data?.message || "Could not save the change." });
+    }
+  };
+
+  const handleMovePhoto = (index, offset) => {
+    const target = index + offset;
+    if (target < 0 || target >= draft.gallery.length) return;
+    const order = [...draft.gallery];
+    [order[index], order[target]] = [order[target], order[index]];
+    savePhotoChange({ gallery: order }, "Saving the order…");
+  };
+
+  const handleProfilePhoto = (url) => {
+    savePhotoChange({ profilePhotoUrl: draft.profilePhotoUrl === url ? "" : url }, "Saving…");
+  };
+
   /* ── guards ───────────────────────────────────────────────────────────── */
   if (authLoading) return <div className="ip-state">Loading…</div>;
   if (!user) return <Navigate to="/login" replace />;
@@ -377,7 +401,13 @@ function InstructorOnboardingPage() {
           {current.key === "media" && (
             <StepMedia
               {...stepProps}
-              media={{ ...mediaState, onAdd: handleAddPhotos, onRemove: handleRemovePhoto }}
+              media={{
+                ...mediaState,
+                onAdd: handleAddPhotos,
+                onRemove: handleRemovePhoto,
+                onMove: handleMovePhoto,
+                onChooseProfile: handleProfilePhoto,
+              }}
             />
           )}
           {current.key === "review" && (
