@@ -4,7 +4,7 @@ import Review from "../models/Review.js";
 import Enterprise from "../models/Enterprise.js";
 import User from "../models/User.js";
 import { withPublicAvatar } from "../utils/avatar.js";
-import { VISIBLE_REVIEW, ratingStats } from "../utils/reviews.js";
+import { VISIBLE_REVIEW, ownReviewsFor, ratingStats } from "../utils/reviews.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 
 const router = express.Router();
@@ -76,6 +76,18 @@ router.post("/", requireAuth, requireRole(["user"]), async (req, res) => {
     }
     console.error("Review error:", error.message);
     return res.status(500).json({ message: "An error occurred." });
+  }
+});
+
+/* ── GET /api/reviews/mine ─────────────────────────────────────────
+   The signed-in learner's own reviews, including any a moderator hid, with
+   the reasons. Nobody else's reviews and nothing about who reported them. */
+router.get("/mine", requireAuth, requireRole(["user"]), async (req, res) => {
+  try {
+    return res.json({ reviews: await ownReviewsFor(req.session.user.id) });
+  } catch (error) {
+    console.error("Own reviews error:", error.message);
+    return res.status(500).json({ message: "Failed to load your reviews." });
   }
 });
 

@@ -39,6 +39,29 @@ export const reviewStatsFor = async (providerId) => {
 };
 
 /*
+ * A learner's own reviews, newest first, hidden ones included. When a
+ * moderator hides a review, its author is the person Article 17 says must be
+ * told what was decided and why, so the statement of reasons comes with it.
+ */
+export const ownReviewsFor = async (reviewerId) => {
+  const reviews = await Review.find({ reviewerId })
+    .populate("providerId", "name")
+    .select("providerId rating comment createdAt hiddenAt hiddenReason")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return reviews.map((review) => ({
+    _id: review._id,
+    instructor: review.providerId ? { id: review.providerId._id, name: review.providerId.name } : null,
+    rating: review.rating,
+    comment: review.comment ?? "",
+    createdAt: review.createdAt,
+    hidden: Boolean(review.hiddenAt),
+    ...(review.hiddenAt ? { hiddenAt: review.hiddenAt, hiddenReason: review.hiddenReason } : {}),
+  }));
+};
+
+/*
  * A moderator's decision on a reported review (DSA Article 17): hide it and
  * keep the statement of reasons with it. Nothing is deleted.
  * Returns true if this call hid it, false if it was gone or already hidden.
