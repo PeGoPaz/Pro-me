@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 
 import InstructorProfile from "../models/InstructorProfile.js";
-import { GALLERY_LIMIT, addToGallery, removeFromGallery } from "../utils/gallery.js";
+import { GALLERY_LIMIT, addToGallery, checkPhotoEdits, removeFromGallery } from "../utils/gallery.js";
 import { publicIdFromUrl, sniffImageType } from "../utils/photos.js";
 
 const bytes = (...values) => Buffer.concat([Buffer.from(values), Buffer.alloc(16)]);
@@ -44,6 +44,28 @@ describe("publicIdFromUrl", () => {
     assert.equal(publicIdFromUrl("https://example.com/image/upload/v1/pro-me/gallery/abc/x.jpg"), null);
     assert.equal(publicIdFromUrl("http://res.cloudinary.com/ourcloud/image/upload/v1/x.jpg"), null);
     assert.equal(publicIdFromUrl(undefined), null);
+  });
+});
+
+describe("checkPhotoEdits", () => {
+  const ours = ["https://res.cloudinary.com/ourcloud/image/upload/v1/a.jpg", "https://res.cloudinary.com/ourcloud/image/upload/v1/b.jpg"];
+
+  it("allows reordering and choosing one of the photos", () => {
+    assert.equal(checkPhotoEdits({ gallery: [ours[1], ours[0]], profilePhotoUrl: ours[1] }, ours), null);
+    assert.equal(checkPhotoEdits({ profilePhotoUrl: "" }, ours), null);
+    assert.equal(checkPhotoEdits({}, ours), null);
+  });
+
+  it("refuses a URL that was not uploaded", () => {
+    assert.match(checkPhotoEdits({ gallery: [ours[0], "https://example.com/x.jpg"] }, ours), /only reorder/);
+    assert.match(checkPhotoEdits({ profilePhotoUrl: "https://example.com/me.jpg" }, ours), /one of your gallery photos/);
+  });
+
+  it("leaves adding and removing to the gallery endpoints", () => {
+    assert.match(checkPhotoEdits({ gallery: [ours[0]] }, ours), /only reorder/);
+    assert.match(checkPhotoEdits({ gallery: [ours[0], ours[0]] }, ours), /only reorder/);
+    assert.match(checkPhotoEdits({ gallery: "a.jpg" }, ours), /only reorder/);
+    assert.match(checkPhotoEdits({ gallery: [ours[0]] }, []), /only reorder/);
   });
 });
 
@@ -95,6 +117,17 @@ describe("gallery", () => {
 
   it("has nowhere to add to without a profile", async () => {
     assert.equal(await addToGallery(new mongoose.Types.ObjectId(), photo(0)), null);
+  });
+
+  it("clears the profile photo when it is the photo removed", async () => {
+    await addToGallery(userId, photo(0));
+    await addToGallery(userId, photo(1));
+    await InstructorProfile.updateOne({ userId }, { $set: { profilePhotoUrl: photo(0) } });
+
+    await removeFromGallery(userId, photo(1));
+    assert.equal((await InstructorProfile.findOne({ userId }).lean()).profilePhotoUrl, photo(0));
+    await removeFromGallery(userId, photo(0));
+    assert.equal((await InstructorProfile.findOne({ userId }).lean()).profilePhotoUrl, "");
   });
 
   it("removes only a photo that is in the gallery", async () => {

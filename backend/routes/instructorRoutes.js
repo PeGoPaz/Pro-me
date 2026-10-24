@@ -5,7 +5,7 @@ import InstructorProfile from "../models/InstructorProfile.js";
 import User from "../models/User.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { ratingStats, reviewStatsFor, visibleReviewsLookup } from "../utils/reviews.js";
-import { GALLERY_LIMIT, addToGallery, galleryFolder, removeFromGallery } from "../utils/gallery.js";
+import { GALLERY_LIMIT, addToGallery, checkPhotoEdits, galleryFolder, removeFromGallery } from "../utils/gallery.js";
 import {
   MAX_PHOTO_BYTES,
   deletePhoto,
@@ -23,7 +23,6 @@ import {
 } from "../data/licenceCategories.js";
 import {
   clampLessonsDone,
-  isHttpsUrl,
   isProfileVisible,
   normaliseIrishPhone,
   profileCompleteness,
@@ -343,15 +342,11 @@ router.put("/me", async (req, res) => {
       }
     }
 
-    /* Images are URLs until the upload pipeline exists, and these end up in
-       an <img src> on a public page. Only https, nothing else. */
-    if (profilePhotoUrl !== undefined && profilePhotoUrl !== "" && !isHttpsUrl(profilePhotoUrl)) {
-      return res.status(400).json({ message: "profilePhotoUrl must be an https URL" });
-    }
-    if (gallery !== undefined) {
-      if (!Array.isArray(gallery) || gallery.length > 12 || !gallery.every(isHttpsUrl)) {
-        return res.status(400).json({ message: "gallery must be up to 12 https URLs" });
-      }
+    /* Photos are uploaded through /me/gallery; here they can only be
+       reordered, or one of them made the profile photo. */
+    const photoError = checkPhotoEdits({ gallery, profilePhotoUrl }, existing?.gallery ?? []);
+    if (photoError) {
+      return res.status(400).json({ message: photoError });
     }
 
     const updates = {
@@ -362,7 +357,7 @@ router.put("/me", async (req, res) => {
       ...(checks[3].value !== undefined ? { transmission: checks[3].value } : {}),
       ...(headline !== undefined ? { headline: String(headline).trim() } : {}),
       ...(bio !== undefined ? { bio: String(bio).trim() } : {}),
-      ...(profilePhotoUrl !== undefined ? { profilePhotoUrl: String(profilePhotoUrl).trim() } : {}),
+      ...(profilePhotoUrl !== undefined ? { profilePhotoUrl } : {}),
       ...(Array.isArray(gallery) ? { gallery } : {}),
       ...(pricePerLesson !== undefined ? { pricePerLesson } : {}),
       ...(acceptingNewStudents !== undefined
