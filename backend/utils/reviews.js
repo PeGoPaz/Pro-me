@@ -1,3 +1,4 @@
+import Booking from "../models/Booking.js";
 import Review from "../models/Review.js";
 
 /*
@@ -72,4 +73,26 @@ export const hideReview = async (reviewId, { reason, reportId }) => {
     { $set: { hiddenAt: new Date(), hiddenReason: reason, hiddenByReport: reportId } }
   );
   return result.modifiedCount > 0;
+};
+
+/*
+ * Whether a learner may review an instructor: only after a lesson that
+ * actually happened - a booking the instructor confirmed, whose date has
+ * passed. Without this anyone with a learner account could rate any
+ * instructor, a competitor included. One review per instructor is still
+ * enforced by the unique index; this only answers it early for the form.
+ * Returns "ok", "no_lesson" or "already_reviewed".
+ */
+export const reviewEligibility = async (learnerId, instructorId) => {
+  const [lesson, existing] = await Promise.all([
+    Booking.exists({
+      userId: learnerId,
+      instructorId,
+      status: "confirmed",
+      bookingDate: { $lte: new Date() },
+    }),
+    Review.exists({ reviewerId: learnerId, providerId: instructorId }),
+  ]);
+  if (existing) return "already_reviewed";
+  return lesson ? "ok" : "no_lesson";
 };

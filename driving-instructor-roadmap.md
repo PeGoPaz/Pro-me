@@ -310,7 +310,7 @@ This is a stranger-meets-stranger-in-a-car product involving minors (Irish learn
 ### Phase 1 — Foundations & Trust
 
 - Configure MongoDB and design the schema: users, instructor profiles, counties, test centres, categories, bookings, reviews, favorites, subscription status.
-- Build the photo upload pipeline (multer + Cloudinary — both are already in backend dependencies but currently unused).
+- ~~Build the photo upload pipeline (multer + Cloudinary)~~ — built: see "Still outstanding" below.
 - Limit provider onboarding to Driving Instructor or Other; remove legacy verticals from the code (see Known Code Debt).
 - Instructor-specific profile fields: counties, test centres, licence categories, transmission, ADI number.
 - ADI number required at signup; account creation immediate; profile listed as **unverified** (badged, ranked below verified, lowest lessons cap) until an admin verifies it against the RSA register via a manual verification queue.
@@ -326,7 +326,7 @@ This is a stranger-meets-stranger-in-a-car product involving minors (Irish learn
 
 - Stripe subscription billing (**placeholder workstream — defined scope, not built in Phase 1**): card verification at trial start (no card = no trial), 3-month free trial auto-converting to €5/month, webhooks for trial-end/payment events, dunning on declined cards (past_due → grace → cancelled per the lapse rules).
 - Availability calendar (replaces the boolean availability toggle) and availability filter wired to it.
-- Reviews linked to completed bookings (block unauthenticated/competitor reviews).
+- ~~Reviews linked to completed bookings (block unauthenticated/competitor reviews).~~ — brought forward into Phase 1: a review needs a booking the instructor confirmed whose date has passed, and a learner who moves a confirmed lesson to another date sends it back to pending, so a lesson cannot be moved into the past to unlock a review.
 - Student reviews with photos.
 - Response-time indicator derived from booking createdAt → confirmedAt latency (no messaging needed).
 - Lesson packages as display-only offerings (learner pays instructor directly).
@@ -402,19 +402,20 @@ the two remaining items still bite.
 
 **Outstanding:**
 
-- **Avatars are stored as base64 data URLs (up to 2MB) in Mongo.** Acceptable for avatars, not viable for galleries. Blocked on the photo upload pipeline (multer + Cloudinary, both still unused dependencies) — until that exists there is nothing to replace them with.
+- ~~**Avatars are stored as base64 data URLs (up to 2MB) in Mongo.**~~ — avatars go to Cloudinary like gallery photos, the base64 route is gone, and the JSON body limit is back down to 100kb.
 - **Bookings and reviews moved onto the instructor**, away from the `Enterprise` listing they used to hang off. `Enterprise` itself survives only as the `Other` category's listing model; it should be reconsidered when `Other` gets its own direction.
 
 ### Debt introduced since, and what happened to it
 
-- ~~**No instructor can create a profile through the UI.**~~ — the onboarding wizard exists at `/onboarding` (basics, coverage, categories, about, review). Unpublished instructors are sent there on login, and the provider dashboard shows profile completion. The **Media** step is left out until photo uploads exist.
+- ~~**No instructor can create a profile through the UI.**~~ — the onboarding wizard exists at `/onboarding` (basics, coverage, categories, about, review). Unpublished instructors are sent there on login, and the provider dashboard shows profile completion. The **Media** step (upload, order, choose the profile photo) came with photo uploads.
 - ~~**No admin role or verification queue.**~~ — `/admin` has the ADI verification queue (checked by hand against the RSA register, as this document specifies for launch) and the DSA report queue, with Article 17 statements of reasons enforced. The role can only be granted with `npm run make-admin` against the database, and only to a learner account.
 - ~~**The site scrolls horizontally on phones.**~~ — stale negative margins on the footer, plain `1fr` grid tracks on the search page, and the provider dashboard growing to the activity heatmap's width. Every page measured at zero overflow at 320, 375 and 1280px.
 
 ### Still outstanding
 
-- **Photo uploads** (multer + Cloudinary). Avatars are still base64 in the user document, now resized to ~100KB in the browser and served as cacheable images rather than inlined into JSON. Galleries need real uploads.
-- ~~**Reviews cannot be hidden** after a report~~ — closing a review report as actioned can now hide the review, with the statement of reasons stored on it. A hidden review is kept, for an appeal and the Article 24(3) transparency report, but drops out of the profile, the search cards, every rating and the ranking.
+- ~~**Photo uploads** (multer + Cloudinary)~~ — the browser resizes a photo before sending it; the server checks the type from the file's bytes, Cloudinary re-encodes it (which strips EXIF and GPS location), and a gallery is capped at 12 by a single conditional update, so two uploads at once cannot both slip past the limit. An instructor can only delete photos inside their own folder.
+- ~~**Reviews cannot be hidden** after a report~~ — closing a review report as actioned can now hide the review, with the statement of reasons stored on it. A hidden review is kept, for an appeal and the Article 24(3) transparency report, but drops out of the profile, the search cards, every rating and the ranking. Its author sees it on their dashboard with the statement of reasons and a way to contest it.
+- ~~**No figures for the Article 24(3) transparency report**~~ — the admin's Transparency tab counts a year of reports: notices by reason and target, outcomes, content actions, referrals to the authorities and the median time to a decision. Writing and publishing the report itself is still a person's job.
 - ~~**Google Fonts are loaded from Google's servers**~~ — both fonts are bundled from `@fontsource` and served from our own origin, and the CSP now allows fonts and styles from nowhere else.
 
 ## Technical Notes

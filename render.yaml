@@ -34,6 +34,11 @@ services:
       - key: MONGO_URI
         sync: false
 
+      # Для загрузки фото: «API environment variable» из консоли Cloudinary.
+      # Без неё сайт работает, а загрузки отвечают 503.
+      - key: CLOUDINARY_URL
+        sync: false
+
       # Render сам сгенерирует случайный 256-битный секрет.
       - key: SESSION_SECRET
         generateValue: true

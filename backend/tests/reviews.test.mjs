@@ -9,10 +9,13 @@ import { after, before, beforeEach, describe, it } from "node:test";
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 
+import Booking from "../models/Booking.js";
 import InstructorProfile from "../models/InstructorProfile.js";
 import Review from "../models/Review.js";
 import User from "../models/User.js";
-import { hideReview, ownReviewsFor, ratingStats, reviewStatsFor, visibleReviewsLookup } from "../utils/reviews.js";
+import {
+  hideReview, ownReviewsFor, ratingStats, reviewEligibility, reviewStatsFor, visibleReviewsLookup,
+} from "../utils/reviews.js";
 
 let memoryServer;
 
@@ -25,7 +28,9 @@ before(async () => {
 });
 
 beforeEach(async () => {
-  await Promise.all([InstructorProfile.deleteMany({}), Review.deleteMany({}), User.deleteMany({})]);
+  await Promise.all([
+    Booking.deleteMany({}), InstructorProfile.deleteMany({}), Review.deleteMany({}), User.deleteMany({}),
+  ]);
 });
 
 after(async () => {
@@ -125,5 +130,31 @@ describe("ownReviewsFor", () => {
     assert.equal(removed.hiddenReason, "The review advertises another business.");
     assert.equal(removed.instructor, null, "an instructor account that no longer exists");
     assert.equal("hiddenByReport" in removed, false, "nothing about the report or who sent it");
+  });
+});
+
+describe("reviewEligibility", () => {
+  const DAY = 24 * 60 * 60 * 1000;
+  const lesson = (userId, instructorId, status, daysFromNow) =>
+    Booking.create({ userId, instructorId, status, bookingDate: new Date(Date.now() + daysFromNow * DAY) });
+
+  it("needs a confirmed lesson that has already happened", async () => {
+    const learner = objectId();
+    const instructor = objectId();
+    assert.equal(await reviewEligibility(learner, instructor), "no_lesson");
+
+    await lesson(learner, instructor, "pending", -3);
+    await lesson(learner, instructor, "cancelled", -2);
+    await lesson(learner, instructor, "confirmed", 2);
+    assert.equal(await reviewEligibility(learner, instructor), "no_lesson", "unconfirmed, cancelled or still ahead");
+
+    await lesson(learner, objectId(), "confirmed", -1);
+    assert.equal(await reviewEligibility(learner, instructor), "no_lesson", "a lesson with someone else");
+
+    await lesson(learner, instructor, "confirmed", -1);
+    assert.equal(await reviewEligibility(learner, instructor), "ok");
+
+    await Review.create({ providerId: instructor, reviewerId: learner, rating: 5 });
+    assert.equal(await reviewEligibility(learner, instructor), "already_reviewed");
   });
 });

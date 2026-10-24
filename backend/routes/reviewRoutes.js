@@ -4,13 +4,16 @@ import Review from "../models/Review.js";
 import Enterprise from "../models/Enterprise.js";
 import User from "../models/User.js";
 import { withPublicAvatar } from "../utils/avatar.js";
-import { VISIBLE_REVIEW, ownReviewsFor, ratingStats } from "../utils/reviews.js";
+import { VISIBLE_REVIEW, ownReviewsFor, ratingStats, reviewEligibility } from "../utils/reviews.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 
 const router = express.Router();
 
+const NO_LESSON_MESSAGE = "You can review an instructor once you have had a lesson with them.";
+
 /* ── POST /api/reviews ─────────────────────────────────────────────
-   Create a review. Only logged-in learners (role: "user") can post.
+   Create a review. Only logged-in learners (role: "user") can post, and only
+   after a confirmed lesson with this instructor whose date has passed.
    One review per learner per INSTRUCTOR, enforced by the unique index.
    serviceId is optional and only meaningful for the Other category.  */
 router.post("/", requireAuth, requireRole(["user"]), async (req, res) => {
@@ -56,6 +59,10 @@ router.post("/", requireAuth, requireRole(["user"]), async (req, res) => {
       return res.status(400).json({ message: "You cannot review your own service." });
     }
 
+    if ((await reviewEligibility(reviewerId, providerId)) === "no_lesson") {
+      return res.status(403).json({ message: NO_LESSON_MESSAGE });
+    }
+
     const review = await Review.create({
       reviewerId,
       providerId,
@@ -88,6 +95,22 @@ router.get("/mine", requireAuth, requireRole(["user"]), async (req, res) => {
   } catch (error) {
     console.error("Own reviews error:", error.message);
     return res.status(500).json({ message: "Failed to load your reviews." });
+  }
+});
+
+/* ── GET /api/reviews/eligibility/:providerId ──────────────────────
+   Whether the signed-in learner may review this instructor yet, so the
+   profile shows the form only when posting it would succeed.          */
+router.get("/eligibility/:providerId", requireAuth, requireRole(["user"]), async (req, res) => {
+  try {
+    const { providerId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(providerId)) {
+      return res.status(400).json({ message: "Invalid providerId." });
+    }
+    return res.json({ status: await reviewEligibility(req.session.user.id, providerId) });
+  } catch (error) {
+    console.error("Review eligibility error:", error.message);
+    return res.status(500).json({ message: "An error occurred." });
   }
 });
 

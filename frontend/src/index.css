@@ -5190,6 +5190,27 @@ details[open] .contact-faq-q::after {
   color: #888;
 }
 
+.adm-year {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.adm-year select {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid #dfe4f2;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+}
+
+.adm-item .adm-facts:last-child {
+  margin-bottom: 0;
+}
+
 .adm-list {
   display: flex;
   flex-direction: column;

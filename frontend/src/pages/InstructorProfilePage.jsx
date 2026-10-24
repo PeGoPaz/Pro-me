@@ -18,9 +18,10 @@ import { formatIrishPhone } from "../utils/formatPhone";
  * simple stat row, a photo grid. The point is that an individual instructor
  * should feel like a person, not a directory row.
  *
- * No new backend was needed. This reads GET /api/instructors/:id (which
- * already returns the public slice, with the ADI number and subscription
- * stripped out) and reuses GET /api/reviews/provider/:id.
+ * It reads GET /api/instructors/:id (the public slice, with the ADI number
+ * and subscription stripped out) and GET /api/reviews/provider/:id; a learner
+ * also asks GET /api/reviews/eligibility/:id, since only someone who has had a
+ * lesson with this instructor can review them.
  */
 
 function InstructorProfilePage() {
@@ -38,6 +39,7 @@ function InstructorProfilePage() {
   const [reviewError, setReviewError] = useState("");
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewDone, setReviewDone] = useState(false);
+  const [eligibility, setEligibility] = useState(null);
 
   useEffect(() => {
     if (!instructorId) return undefined;
@@ -103,9 +105,22 @@ function InstructorProfilePage() {
     return () => { ignore = true; };
   }, [isLearner, instructorUserId]);
 
-  /* Learners only, and never your own profile. */
-  const canReview =
+  /* Learners only, never your own profile, and only after a lesson. */
+  const mayAskToReview =
     isLearner && instructorUserId && String(user?._id ?? user?.id) !== instructorUserId;
+
+  useEffect(() => {
+    if (!mayAskToReview) return undefined;
+    let ignore = false;
+
+    api.get(`/reviews/eligibility/${instructorUserId}`)
+      .then((res) => { if (!ignore) setEligibility(res.data.status); })
+      .catch(() => {});
+
+    return () => { ignore = true; };
+  }, [mayAskToReview, instructorUserId]);
+
+  const canReview = mayAskToReview && eligibility === "ok";
 
   const countyLabels = useMemo(
     () => Object.fromEntries((reference?.counties ?? []).map((c) => [c.slug, c.name])),
@@ -436,6 +451,12 @@ function InstructorProfilePage() {
 
         {reviewDone && (
           <p className="ip-subtle">Thanks — your review has been posted.</p>
+        )}
+
+        {mayAskToReview && eligibility === "no_lesson" && (
+          <p className="ip-subtle">
+            You can review {instructor.name?.split(" ")[0] || "this instructor"} once you have had a lesson with them.
+          </p>
         )}
 
         {!user && (

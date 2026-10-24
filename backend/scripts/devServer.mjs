@@ -154,10 +154,14 @@ for (const sample of SAMPLE_INSTRUCTORS) {
    so both dashboards and the instructor profile have something to show. */
 const Booking = (await import("../models/Booking.js")).default;
 
+/* Like the admin below, a login that only exists in this in-memory database. */
+const bcrypt = (await import("bcrypt")).default;
+const DEV_LEARNER_EMAIL = "learner@example.com";
+const DEV_LEARNER_PASSWORD = "LearnerDev123";
 const demoLearner = await User.create({
   name: "Sample learner",
-  email: "learner@example.com",
-  password: "x".repeat(60),
+  email: DEV_LEARNER_EMAIL,
+  password: await bcrypt.hash(DEV_LEARNER_PASSWORD, 10),
   role: "user",
 });
 
@@ -179,10 +183,24 @@ for (const [index, profile] of openInstructors.entries()) {
   });
 }
 
+/* And one lesson that already happened, so the review form can be tried: a
+   learner can only review an instructor after a confirmed, past lesson. */
+if (openInstructors.length) {
+  const lastWeek = new Date();
+  lastWeek.setDate(lastWeek.getDate() - 7);
+  await Booking.create({
+    userId: demoLearner._id,
+    instructorId: openInstructors[0].userId,
+    bookingDate: lastWeek,
+    status: "confirmed",
+    confirmedAt: lastWeek,
+    notes: "Sample past lesson created by the in-memory dev server.",
+  });
+}
+
 /* A local-only admin, so the verification and report queues can be tried.
    This database lives in memory and disappears on exit; the password is
    printed below precisely because it protects nothing. */
-const bcrypt = (await import("bcrypt")).default;
 const DEV_ADMIN_EMAIL = "admin@example.com";
 const DEV_ADMIN_PASSWORD = "AdminDev123";
 await User.create({
@@ -193,12 +211,13 @@ await User.create({
 });
 
 console.log(
-  `\nDev admin (this in-memory database only): ${DEV_ADMIN_EMAIL} / ${DEV_ADMIN_PASSWORD}`
+  `\nDev admin (this in-memory database only): ${DEV_ADMIN_EMAIL} / ${DEV_ADMIN_PASSWORD}` +
+  `\nDev learner, with one past lesson to review: ${DEV_LEARNER_EMAIL} / ${DEV_LEARNER_PASSWORD}`
 );
 
 console.log(
   `\nIn-memory API ready on http://localhost:${process.env.PORT}\n` +
-  `Seeded ${SAMPLE_INSTRUCTORS.length} instructors and ${openInstructors.length} bookings. Nothing is persisted.\n` +
+  `Seeded ${SAMPLE_INSTRUCTORS.length} instructors and ${await Booking.countDocuments()} bookings. Nothing is persisted.\n` +
   `Run the frontend with: npm --prefix ../frontend run dev\n`
 );
 

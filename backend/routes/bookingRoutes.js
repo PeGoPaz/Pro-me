@@ -182,6 +182,13 @@ router.patch("/:id", requireRole(["user"]), async (req, res) => {
         return res.status(400).json({ message: "bookingDate must be a valid date" });
       }
       updates.bookingDate = parsedDate;
+      /* A new date is a new request: the instructor agreed to the old one.
+         Otherwise a learner could move a confirmed lesson into the past and
+         review a lesson that never happened. */
+      if (booking.status === "confirmed" && parsedDate.getTime() !== booking.bookingDate.getTime()) {
+        updates.status = "pending";
+        updates.confirmedAt = null;
+      }
     }
     if (notes !== undefined) updates.notes = notes;
 

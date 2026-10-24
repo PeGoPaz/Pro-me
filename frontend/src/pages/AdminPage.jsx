@@ -12,6 +12,9 @@ import { formatShortDate } from "../utils/formatDate";
  *    badge can appear.
  * 2. Reports — the DSA Article 16 notices learners and visitors send in, with
  *    the Article 17 statement of reasons recorded on every decision.
+ *
+ * A third tab adds up a year of those reports: the figures the annual
+ * Article 24(3) transparency report has to publish.
  */
 
 /* County slugs are the county names in lower case ("galway"). */
@@ -250,9 +253,105 @@ function ReportQueue() {
   );
 }
 
+const TARGET_LABELS = { profile: "Profiles", review: "Reviews" };
+const CONTENT_ACTION_LABELS = {
+  unpublished_profile: "Profiles taken off the listing",
+  hidden_review: "Reviews hidden",
+};
+
+/* Reports can only exist from the year the queue went live. */
+const FIRST_REPORT_YEAR = 2026;
+
+const Counts = ({ counts, labels }) => {
+  const rows = Object.entries(counts).sort(([, a], [, b]) => b - a);
+  if (!rows.length) return <p className="adm-item-meta">None</p>;
+  return (
+    <dl className="adm-facts">
+      {rows.map(([key, count]) => (
+        <div key={key}><dt>{labels[key] ?? key}</dt><dd>{count}</dd></div>
+      ))}
+    </dl>
+  );
+};
+
+function TransparencyReport() {
+  const thisYear = new Date().getFullYear();
+  const [year, setYear] = useState(thisYear);
+  /* Kept with the year it answers, so switching years shows "Loading…"
+     rather than the previous year's figures. */
+  const [loaded, setLoaded] = useState({ year: null, report: null, error: "" });
+
+  useEffect(() => {
+    let ignore = false;
+    api.get(`/admin/transparency?year=${year}`)
+      .then((res) => { if (!ignore) setLoaded({ year, report: res.data, error: "" }); })
+      .catch(() => { if (!ignore) setLoaded({ year, report: null, error: "Could not load the figures." }); });
+    return () => { ignore = true; };
+  }, [year]);
+
+  const { report, error } = loaded.year === year ? loaded : { report: null, error: "" };
+
+  const years = [];
+  for (let y = thisYear; y >= FIRST_REPORT_YEAR; y -= 1) years.push(y);
+
+  return (
+    <>
+      <p className="adm-intro">
+        What the annual transparency report (DSA Article 24(3)) has to publish,
+        counted from the reports themselves. A report belongs to the year it was received in.
+      </p>
+
+      <label className="adm-year">
+        <span>Year</span>
+        <select value={year} onChange={(e) => setYear(Number(e.target.value))}>
+          {years.map((y) => <option key={y} value={y}>{y}</option>)}
+        </select>
+      </label>
+
+      {!report ? (
+        <p className="adm-empty">{error || "Loading…"}</p>
+      ) : (
+        <div className="adm-list">
+          <section className="adm-item">
+            <p className="adm-item-title">Notices received</p>
+            <dl className="adm-facts">
+              <div><dt>Total</dt><dd>{report.notices.total}</dd></div>
+              <div><dt>Sent without an account</dt><dd>{report.notices.anonymous}</dd></div>
+            </dl>
+            <Counts counts={report.notices.byTarget} labels={TARGET_LABELS} />
+            <Counts counts={report.notices.byReason} labels={REASON_LABELS} />
+          </section>
+
+          <section className="adm-item">
+            <p className="adm-item-title">What was done</p>
+            <dl className="adm-facts">
+              <div><dt>Actioned</dt><dd>{report.outcomes.actioned}</dd></div>
+              <div><dt>Dismissed</dt><dd>{report.outcomes.dismissed}</dd></div>
+              <div><dt>Still open</dt><dd>{report.outcomes.stillOpen}</dd></div>
+              <div><dt>Referred to the authorities</dt><dd>{report.outcomes.referredToAuthorities}</dd></div>
+              <div>
+                <dt>Median time to a decision</dt>
+                <dd>{report.medianHoursToClose === null ? "—" : `${report.medianHoursToClose} h`}</dd>
+              </div>
+            </dl>
+            <Counts counts={report.outcomes.contentActions} labels={CONTENT_ACTION_LABELS} />
+          </section>
+        </div>
+      )}
+    </>
+  );
+}
+
+const TABS = [
+  ["verification", "ADI verification", VerificationQueue],
+  ["reports", "Reports", ReportQueue],
+  ["transparency", "Transparency", TransparencyReport],
+];
+
 function AdminPage() {
   const { user, loading } = useAuth();
   const [tab, setTab] = useState("verification");
+  const Panel = TABS.find(([key]) => key === tab)[2];
 
   if (loading) return <div className="ip-state">Loading…</div>;
   if (!user) return <Navigate to="/login" replace />;
@@ -270,19 +369,16 @@ function AdminPage() {
       <h1 className="adm-title">Admin</h1>
 
       <div className="adm-tabs" role="tablist">
-        <button type="button" role="tab" aria-selected={tab === "verification"}
-          className={`adm-tab ${tab === "verification" ? "adm-tab-active" : ""}`}
-          onClick={() => setTab("verification")}>
-          ADI verification
-        </button>
-        <button type="button" role="tab" aria-selected={tab === "reports"}
-          className={`adm-tab ${tab === "reports" ? "adm-tab-active" : ""}`}
-          onClick={() => setTab("reports")}>
-          Reports
-        </button>
+        {TABS.map(([key, label]) => (
+          <button key={key} type="button" role="tab" aria-selected={tab === key}
+            className={`adm-tab ${tab === key ? "adm-tab-active" : ""}`}
+            onClick={() => setTab(key)}>
+            {label}
+          </button>
+        ))}
       </div>
 
-      {tab === "verification" ? <VerificationQueue /> : <ReportQueue />}
+      <Panel />
     </div>
   );
 }
