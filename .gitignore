@@ -30,3 +30,6 @@ yarn-error.log*
 
 # Project artifacts
 demo.mp4
+
+# Local editor and assistant settings
+.claude/
