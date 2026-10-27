@@ -10,6 +10,21 @@ real coverage.
 See [`driving-instructor-roadmap.md`](driving-instructor-roadmap.md) for the
 product direction. That file is the source of truth, not this one.
 
+## Screenshots
+
+Taken from the in-memory dev server (`npm run dev:memory`), so the instructors
+are its sample data.
+
+| Search | Instructor profile |
+|---|---|
+| ![Search results: verified instructors first, with ratings, response times, coverage and price](docs/screenshots/search.png) | ![An instructor's profile: verified badge, rating, lessons, typical reply time, coverage and lesson request](docs/screenshots/profile.png) |
+| **Instructor onboarding** | **Admin: reported content** |
+| ![Step 1 of the six-step onboarding wizard](docs/screenshots/onboarding.png) | ![The report queue, where every decision needs a statement of reasons](docs/screenshots/admin-reports.png) |
+
+<p align="center">
+  <img src="docs/screenshots/phone-profile.png" width="280" alt="The instructor profile on a phone">
+</p>
+
 ## Features
 
 - **Instructor search**: filter by county, RSA test centre, licence category, transmission, price and whether they are taking students
