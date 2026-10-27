@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { responseExplanation, responseSentence } from "../utils/responseTime";
 
 /*
  * A single instructor in the search results.
@@ -86,6 +87,12 @@ function InstructorCard({
               </span>
             )}
           </div>
+
+          {instructor.responseTime && (
+            <p className="inst-card-reply" title={responseExplanation(instructor.responseTime)}>
+              {responseSentence(instructor.responseTime)}
+            </p>
+          )}
         </div>
 
         {onToggleSave && (

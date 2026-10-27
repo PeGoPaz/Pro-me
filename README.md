@@ -17,6 +17,7 @@ product direction. That file is the source of truth, not this one.
 - **RSA-grounded reference data**: 26 counties and all 62 test centres, imported from the RSA's own register with Eircodes, coordinates and the categories each centre tests
 - **Instructor profiles**: photo, ADI verification badge, coverage, category badges, bio, gallery and reviews
 - **Photo uploads**: instructors upload a gallery of up to 12 photos, put them in order and choose their profile photo; everyone can upload an avatar. The type is checked from the file's bytes, not its name, and Cloudinary re-encodes every image, which strips EXIF data and GPS location
+- **Response time**: the profile and search card say how quickly an instructor usually accepts or declines a lesson request - the median over recent requests, with ignored requests counted against them
 - **Reviews after a real lesson**: a learner can review an instructor only after a lesson the instructor confirmed and whose date has passed. Moving a confirmed lesson to a new date sends it back for confirmation
 - **Save and compare**: learners shortlist instructors (requires an account)
 - **Lesson requests**: a learner requests a lesson from an instructor, who accepts or declines. The platform never handles lesson money — learners pay instructors directly

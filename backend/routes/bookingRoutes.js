@@ -5,6 +5,7 @@ import Enterprise from "../models/Enterprise.js";
 import User from "../models/User.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { withPublicAvatar } from "../utils/avatar.js";
+import { statusUpdate } from "../utils/responseTime.js";
 
 const router = express.Router();
 
@@ -262,10 +263,9 @@ router.patch("/:id/status", requireRole(["enterprise"]), async (req, res) => {
         .json({ message: "Booking not found" });
     }
 
-    booking.status = status;
-    /* This timestamp is what the Phase 2 response-time indicator measures
-       against createdAt, so it is only set on a real confirmation. */
-    booking.confirmedAt = status === "confirmed" ? new Date() : null;
+    /* Records the first answer as well, which the response time on the
+       instructor's profile is measured by. */
+    booking.set(statusUpdate(booking, status));
     await booking.save();
 
     return res.status(200).json({

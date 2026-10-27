@@ -6,6 +6,7 @@ import { StarDisplay, StarPicker } from "../components/StarRating";
 import ReviewCard from "../components/ReviewCard";
 import ReportDialog from "../components/ReportDialog";
 import { formatIrishPhone } from "../utils/formatPhone";
+import { responseExplanation, responseFigure } from "../utils/responseTime";
 
 /*
  * The public instructor profile.
@@ -269,6 +270,14 @@ function InstructorProfilePage() {
                 lessons{instructor.lessonsDoneIsSelfReported && " (self-reported)"}
               </span>
             </div>}
+
+            {/* Left out until there are enough requests to go on. */}
+            {instructor.responseTime && (
+              <div className="ip-stat" title={responseExplanation(instructor.responseTime)}>
+                <span className="ip-stat-value">{responseFigure(instructor.responseTime)}</span>
+                <span className="ip-stat-label">typical reply</span>
+              </div>
+            )}
 
             <div className="ip-stat">
               <span className={`ip-stat-value ${instructor.acceptingNewStudents ? "ip-stat-open" : "ip-stat-closed"}`}>

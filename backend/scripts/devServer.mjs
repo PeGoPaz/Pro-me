@@ -183,6 +183,30 @@ for (const [index, profile] of openInstructors.entries()) {
   });
 }
 
+/* Earlier requests to the first open instructor, answered within a few hours
+   (one declined), so the profile and the search card have a response time to
+   show. Written straight into the collection so they can be dated in the past. */
+if (openInstructors.length) {
+  const hour = 60 * 60 * 1000;
+  await Booking.collection.insertMany(
+    [2, 5, 1, 3, 4, 2].map((took, i) => {
+      const asked = new Date(Date.now() - (10 + i * 7) * 24 * hour);
+      const answered = new Date(asked.getTime() + took * hour);
+      return {
+        userId: demoLearner._id,
+        instructorId: openInstructors[0].userId,
+        bookingDate: new Date(asked.getTime() + 3 * 24 * hour),
+        status: i === 1 ? "cancelled" : "confirmed",
+        notes: "Sample earlier request created by the in-memory dev server.",
+        confirmedAt: i === 1 ? null : answered,
+        respondedAt: answered,
+        createdAt: asked,
+        updatedAt: answered,
+      };
+    })
+  );
+}
+
 /* And one lesson that already happened, so the review form can be tried: a
    learner can only review an instructor after a confirmed, past lesson. */
 if (openInstructors.length) {

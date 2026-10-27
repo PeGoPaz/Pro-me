@@ -5,6 +5,7 @@ import InstructorProfile from "../models/InstructorProfile.js";
 import User from "../models/User.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { ratingStats, reviewStatsFor, visibleReviewsLookup } from "../utils/reviews.js";
+import { responseTimeFor, responseTimesFor } from "../utils/responseTime.js";
 import { GALLERY_LIMIT, addToGallery, checkPhotoEdits, galleryFolder, removeFromGallery } from "../utils/gallery.js";
 import { GALLERY_PHOTO, deletePhoto, publicIdFromUrl, receivePhoto, uploadPhoto } from "../utils/photos.js";
 import { COUNTY_SLUGS } from "../data/counties.js";
@@ -97,10 +98,13 @@ router.get("/", async (req, res) => {
       InstructorProfile.aggregate(pipeline),
       InstructorProfile.countDocuments(query),
     ]);
+    const responseTimes = await responseTimesFor(rows.map((row) => row.userId));
 
     const results = rows.map((row) => {
       const { reviewCount, averageRating } = ratingStats((row.reviews ?? []).map((review) => review.rating));
-      return toPublicProfile(row, { user: row.user, reviewCount, averageRating });
+      return toPublicProfile(row, {
+        user: row.user, reviewCount, averageRating, responseTime: responseTimes.get(String(row.userId)),
+      });
     });
 
     /* minRating filters on a value computed from the reviews collection, so it
@@ -157,12 +161,16 @@ router.get("/:id", async (req, res, next) => {
     }
 
     const instructorUserId = profile.userId?._id ?? profile.userId;
-    const stats = await reviewStatsFor(instructorUserId);
+    const [stats, responseTime] = await Promise.all([
+      reviewStatsFor(instructorUserId),
+      responseTimeFor(instructorUserId),
+    ]);
 
     return res.json(
       toPublicProfile(profile, {
         user: profile.userId,
         ...stats,
+        responseTime,
         includeContact: Boolean(req.session?.user),
       })
     );

@@ -4073,6 +4073,12 @@ details[open] .contact-faq-q::after {
   color: #666;
 }
 
+.inst-card-reply {
+  margin: 0.3rem 0 0;
+  font-size: 0.8rem;
+  color: #197a52;
+}
+
 /* Never let the count read as a verified figure. */
 .inst-card-selfreported {
   color: #a0a4b2;

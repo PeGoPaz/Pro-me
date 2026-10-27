@@ -52,9 +52,15 @@ const bookingSchema = new mongoose.Schema({
         trim: true,
         maxlength: 1000
     },
-    /* createdAt → confirmedAt is what the Phase 2 response-time indicator is
-       derived from, so it is recorded even though nothing reads it yet. */
     confirmedAt: {
+        type: Date,
+        default: null
+    },
+    /* When the instructor first answered, by accepting or declining.
+       createdAt → respondedAt is the response time shown on their profile
+       (utils/responseTime.js); a decline is an answer too, so confirmedAt
+       alone would leave out every quick "no". */
+    respondedAt: {
         type: Date,
         default: null
     }

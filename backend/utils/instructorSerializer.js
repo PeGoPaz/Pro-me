@@ -13,7 +13,7 @@ import { publicAvatarUrl } from "./avatar.js";
    field (the instructor's billing is nobody else's business). */
 export const toPublicProfile = (
   profile,
-  { user, reviewCount = 0, averageRating = null, completedBookings = 0, includeContact = false } = {}
+  { user, reviewCount = 0, averageRating = null, responseTime = null, completedBookings = 0, includeContact = false } = {}
 ) => {
   if (!profile) return null;
 
@@ -53,6 +53,9 @@ export const toPublicProfile = (
 
     reviewCount,
     averageRating,
+    /* { medianHours, bucket, basedOn } once there are enough requests to
+       say anything, otherwise null - see utils/responseTime.js. */
+    responseTime,
     profileCompleteness: profile.profileCompleteness ?? 0,
     memberSince: profile.createdAt ?? null,
 

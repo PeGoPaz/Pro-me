@@ -328,7 +328,7 @@ This is a stranger-meets-stranger-in-a-car product involving minors (Irish learn
 - Availability calendar (replaces the boolean availability toggle) and availability filter wired to it.
 - ~~Reviews linked to completed bookings (block unauthenticated/competitor reviews).~~ — brought forward into Phase 1: a review needs a booking the instructor confirmed whose date has passed, and a learner who moves a confirmed lesson to another date sends it back to pending, so a lesson cannot be moved into the past to unlock a review.
 - Student reviews with photos.
-- Response-time indicator derived from booking createdAt → confirmedAt latency (no messaging needed).
+- ~~Response-time indicator derived from booking createdAt → confirmedAt latency (no messaging needed).~~ — built, measured to the first answer rather than to confirmedAt, so a quick decline counts too (`respondedAt`). It is the median over the last 90 days, shown only from five requests up, and a request left unanswered for two days counts with the time it has waited, so ignoring requests cannot make an instructor look quick.
 - Lesson packages as display-only offerings (learner pays instructor directly).
 - Lessons-done verification/corroboration; lessons-done sorting becomes available.
 - Refine search filters and result ranking.
