@@ -7,6 +7,7 @@ import { requireAuth, requireRole } from "../middleware/auth.js";
 import { ratingStats, reviewStatsFor, visibleReviewsLookup } from "../utils/reviews.js";
 import { responseTimeFor, responseTimesFor } from "../utils/responseTime.js";
 import { POST_LIMIT, addPost, checkPhotoEdits, editCaption, postsFolder, removePost } from "../utils/posts.js";
+import { parseCursor, readFeed, readStories } from "../utils/feed.js";
 import { GALLERY_PHOTO, deletePhoto, publicIdFromUrl, receivePhoto, uploadPhoto } from "../utils/photos.js";
 import { COUNTY_SLUGS } from "../data/counties.js";
 import { TEST_CENTRE_SLUGS } from "../data/testCentres.js";
@@ -130,6 +131,32 @@ router.get("/", async (req, res) => {
   } catch (error) {
     console.error("Instructor search error:", error.message);
     return res.status(500).json({ message: "Failed to search instructors" });
+  }
+});
+
+/* ── GET /api/instructors/feed — posts from every listed instructor ──────
+   Newest first, a page at a time: ?cursor= takes the `next` of the page
+   before. Public, like the profiles the posts come from. */
+router.get("/feed", async (req, res) => {
+  const cursor = req.query.cursor ? parseCursor(req.query.cursor) : null;
+  if (req.query.cursor && !cursor) {
+    return res.status(400).json({ message: "That is not a feed cursor" });
+  }
+  try {
+    return res.json(await readFeed({ cursor }));
+  } catch (error) {
+    console.error("Feed error:", error.message);
+    return res.status(500).json({ message: "Failed to load the feed" });
+  }
+});
+
+/* ── GET /api/instructors/stories — who posted this week ─────────────────── */
+router.get("/stories", async (req, res) => {
+  try {
+    return res.json({ stories: await readStories() });
+  } catch (error) {
+    console.error("Stories error:", error.message);
+    return res.status(500).json({ message: "Failed to load stories" });
   }
 });
 

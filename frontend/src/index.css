@@ -5816,3 +5816,242 @@ details[open] .contact-faq-q::after {
     border-radius: 0;
   }
 }
+
+/* Text for screen readers only: there to be heard, not seen. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Home feed and stories ─────────────────────────────────────────────── */
+.feed {
+  width: 100%;
+  max-width: 520px;
+  min-width: 0;
+  margin: 0 auto;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.feed-avatar {
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--primary-soft);
+}
+
+.feed-avatar-initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  font-family: var(--font-brand);
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+}
+
+/* Stories: amber ring while there is something new, grey once watched. */
+.stories {
+  display: flex;
+  gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0.75rem 0.25rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.story-bubble {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.story-bubble-ring {
+  display: flex;
+  padding: 3px;
+  border-radius: 50%;
+  background: conic-gradient(from 210deg, var(--accent), var(--primary), var(--accent));
+}
+
+.story-bubble-ring .feed-avatar {
+  border: 3px solid var(--paper);
+}
+
+.story-bubble.is-seen .story-bubble-ring {
+  background: var(--line-strong);
+}
+
+.story-bubble.is-seen .story-bubble-name {
+  color: var(--muted);
+}
+
+.story-bubble-name {
+  max-width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A post in the feed */
+.feed-post {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.feed-post-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.85rem;
+}
+
+.feed-post-author {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.feed-post-name {
+  font-weight: 700;
+  font-size: 0.92rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feed-post-verified {
+  display: inline-flex;
+  color: var(--primary);
+}
+
+.feed-post-time {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.feed-post-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  background: var(--surface-2);
+}
+
+.feed-post-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 0.85rem 0;
+}
+
+.feed-post-caption {
+  margin: 0;
+  padding: 0.6rem 0.85rem 0.9rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.feed-post-caption-name {
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.feed-end {
+  display: grid;
+  justify-items: center;
+  padding: 0.5rem 0 1.5rem;
+}
+
+.feed-end-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* A story of photos: the photo fills the card, the words sit over it. */
+.story-photo {
+  padding: 0;
+  background: var(--ink);
+}
+
+.story-photo-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.story-photo .story-progress,
+.story-photo .story-head,
+.story-photo .story-foot {
+  position: relative;
+  z-index: 1;
+}
+
+.story-photo .story-progress {
+  padding: 0.75rem 0.75rem 0;
+}
+
+.story-photo .story-head {
+  padding: 0.75rem 0.9rem;
+  background: linear-gradient(to bottom, rgba(var(--ink-rgb), 0.55), transparent);
+}
+
+.story-author-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--on-primary);
+  text-decoration: none;
+}
+
+.story-time {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.8rem;
+}
+
+.story-foot {
+  margin-top: auto;
+  display: grid;
+  gap: 0.75rem;
+  padding: 2rem 1rem 1.1rem;
+  background: linear-gradient(to top, rgba(var(--ink-rgb), 0.7), transparent);
+}
+
+.story-caption {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+/* Over the photo the step buttons sit between the header and the footer, so
+   the links in both stay clickable. */
+.story-photo .story-tap {
+  top: 4rem;
+  bottom: 6rem;
+  z-index: 2;
+}
