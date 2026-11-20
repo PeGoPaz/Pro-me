@@ -253,8 +253,8 @@ function ProviderProfile() {
         {formSuccess && (
           <div className="review-success">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="12" cy="12" r="10" stroke="#1a8a5a" strokeWidth="2" />
-              <path d="M7 12l4 4 6-6" stroke="#1a8a5a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+              <path d="M7 12l4 4 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             Thank you! Your review has been submitted.
           </div>

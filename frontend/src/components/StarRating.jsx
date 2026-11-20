@@ -13,8 +13,7 @@ export function StarDisplay({ rating, size = 16 }) {
           height={size}
           viewBox="0 0 24 24"
           aria-hidden="true"
-          fill={n <= Math.round(rating) ? "#f59e0b" : "none"}
-          stroke={n <= Math.round(rating) ? "#f59e0b" : "#d1d5db"}
+          className={n <= Math.round(rating) ? "star star-on" : "star"}
           strokeWidth="1.5"
         >
           <path d={STAR_PATH} />
@@ -46,10 +45,8 @@ export function StarPicker({ value, onChange }) {
             height="28"
             viewBox="0 0 24 24"
             aria-hidden="true"
-            fill={n <= active ? "#f59e0b" : "none"}
-            stroke={n <= active ? "#f59e0b" : "#d1d5db"}
+            className={n <= active ? "star star-on" : "star"}
             strokeWidth="1.5"
-            style={{ transition: "fill 0.1s, stroke 0.1s" }}
           >
             <path d={STAR_PATH} />
           </svg>
