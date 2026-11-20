@@ -14,6 +14,11 @@ const PATHS = {
   close: "M6 6l12 12 M18 6L6 18",
   left: "M15 5l-7 7 7 7",
   right: "M9 5l7 7-7 7",
+  home: "M4 10.5L12 4l8 6.5V20h-5v-6h-6v6H4z",
+  search: "M11 18a7 7 0 100-14 7 7 0 000 14z M16 16l4 4",
+  heart: "M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z",
+  person: "M12 12a4 4 0 100-8 4 4 0 000 8z M4 20c0-4 3.6-7 8-7s8 3 8 7",
+  list: "M8 6h12 M8 12h12 M8 18h12 M4 6h.01 M4 12h.01 M4 18h.01",
 };
 
 export default function ProfileIcon({ name, size = 20, className = "" }) {

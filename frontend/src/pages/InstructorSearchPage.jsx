@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import api from "../api/index.js";
 import { useAuth } from "../context/auth";
+import ExploreTile from "../components/ExploreTile";
 import InstructorCard from "../components/InstructorCard";
+import ProfileIcon from "../components/profile/ProfileIcon";
 
 /*
  * One list-based search page with filters — not a separate SEO page per county
@@ -34,13 +36,22 @@ function InstructorSearchPage() {
   const [reference, setReference] = useState(EMPTY_REFERENCE);
   const [referenceError, setReferenceError] = useState("");
   const [savedIds, setSavedIds] = useState(EMPTY_SAVED);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   /* One keyed payload rather than separate results/total/loading/error states.
      Loading is derived by comparing the payload's key with the current query,
      which avoids setting state synchronously inside the effect (that triggers
      a cascading re-render) and makes a stale response impossible to show. */
   const [payload, setPayload] = useState(null);
-  const queryKey = searchParams.toString();
+  /* How results are shown - a grid of photos, as on any app's explore page,
+     or the cards with every detail - lives in the address too, but is not
+     part of the query: switching it does not search again. */
+  const view = searchParams.get("view") === "list" ? "list" : "grid";
+  const queryKey = useMemo(() => {
+    const query = new URLSearchParams(searchParams);
+    query.delete("view");
+    return query.toString();
+  }, [searchParams]);
   const loading = payload?.key !== queryKey;
   const results = payload?.results ?? [];
   const total = payload?.total ?? 0;
@@ -138,7 +149,16 @@ function InstructorSearchPage() {
     [searchParams, setSearchParams]
   );
 
-  const clearFilters = () => setSearchParams(new URLSearchParams());
+  /* Clearing the filters keeps the chosen view. */
+  const clearFilters = () => setSearchParams(view === "list" ? new URLSearchParams({ view }) : new URLSearchParams());
+
+  /* Unlike a filter, switching the view keeps the page you are on. */
+  const chooseView = (next) => {
+    const params = new URLSearchParams(searchParams);
+    if (next === "list") params.set("view", "list");
+    else params.delete("view");
+    setSearchParams(params, { replace: true });
+  };
 
   const toggleSave = async (instructorUserId) => {
     if (!isLearner) {
@@ -204,7 +224,7 @@ function InstructorSearchPage() {
       </header>
 
       <div className="inst-search-body">
-        <aside className="inst-filters" aria-label="Filters">
+        <aside className={`inst-filters${filtersOpen ? " is-open" : ""}`} aria-label="Filters">
           <div className="inst-filters-head">
             <h2 className="inst-filters-title">Filters</h2>
             {activeFilterCount > 0 && (
@@ -212,7 +232,19 @@ function InstructorSearchPage() {
                 Clear all ({activeFilterCount})
               </button>
             )}
+            {/* On a phone the filters fold away, so the results come first. */}
+            <button
+              type="button"
+              className="inst-filters-toggle"
+              aria-expanded={filtersOpen}
+              aria-controls="inst-filters-body"
+              onClick={() => setFiltersOpen((open) => !open)}
+            >
+              {filtersOpen ? "Hide" : "Show"}
+            </button>
           </div>
+
+          <div className="inst-filters-body" id="inst-filters-body">
 
           <label className="inst-filter">
             <span className="inst-filter-label">County</span>
@@ -299,6 +331,7 @@ function InstructorSearchPage() {
             />
             <span>Only taking new students</span>
           </label>
+          </div>
         </aside>
 
         <section className="inst-results">
@@ -323,6 +356,21 @@ function InstructorSearchPage() {
             </label>
           </div>
 
+          <div className="inst-view" role="group" aria-label="Show results as">
+            {[["grid", "Grid", "grid"], ["list", "List", "list"]].map(([value, label, icon]) => (
+              <button
+                key={value}
+                type="button"
+                className={`inst-view-option${view === value ? " is-active" : ""}`}
+                aria-pressed={view === value}
+                onClick={() => chooseView(value)}
+              >
+                <ProfileIcon name={icon} size={16} />
+                {label}
+              </button>
+            ))}
+          </div>
+
           {/* The roadmap asks for the ranking to be explained rather than
               left implicit. The API states it; we show it. */}
           {filters.sort === "trust" && sortExplanation && (
@@ -342,6 +390,14 @@ function InstructorSearchPage() {
                 </button>
               )}
             </div>
+          ) : view === "grid" ? (
+            <ul className="explore-grid">
+              {results.map((instructor) => (
+                <li key={instructor.id}>
+                  <ExploreTile instructor={instructor} />
+                </li>
+              ))}
+            </ul>
           ) : (
             <ul className="inst-grid">
               {results.map((instructor) => (

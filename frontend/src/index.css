@@ -3879,6 +3879,34 @@ details[open] .contact-faq-q::after {
   gap: 0.5rem;
 }
 
+.inst-filters-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.inst-filters-toggle {
+  display: none;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary);
+  cursor: pointer;
+}
+
+@media (max-width: 720px) {
+  .inst-filters-toggle {
+    display: inline-flex;
+  }
+
+  .inst-filters:not(.is-open) .inst-filters-body {
+    display: none;
+  }
+}
+
 .inst-filters-title {
   margin: 0;
   font-size: 1rem;
@@ -6054,4 +6082,192 @@ details[open] .contact-faq-q::after {
   top: 4rem;
   bottom: 6rem;
   z-index: 2;
+}
+
+/* ── Navigation like an app: tab bar, explore grid, saved ──────────────── */
+.bottom-nav {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .bottom-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 210;
+    display: flex;
+    justify-content: space-around;
+    padding: 0.35rem 0 calc(0.35rem + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid var(--line);
+  }
+
+  /* Room for the tab bar under the last thing on every page. */
+  .page {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
+}
+
+.bottom-nav-tab {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  min-width: 64px;
+  padding: 0.25rem 0.5rem;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.bottom-nav-tab.is-active {
+  color: var(--primary);
+}
+
+.bottom-nav-tab.is-active svg path {
+  stroke-width: 2.4;
+}
+
+/* Grid or list on the search page */
+.inst-view {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.inst-view-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.inst-view-option.is-active {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(var(--ink-rgb), 0.08);
+}
+
+/* Explore and saved: square tiles, three across, the name over the picture. */
+.explore-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.explore-tile {
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--primary-soft);
+  color: var(--on-primary);
+  text-decoration: none;
+}
+
+.explore-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.2s;
+}
+
+.explore-tile:hover img,
+.explore-tile:focus-visible img {
+  transform: scale(1.03);
+}
+
+.explore-tile-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  /* Clear of the name and price along the bottom of the tile. */
+  padding-bottom: 28%;
+  color: var(--primary);
+  font-family: var(--font-brand);
+  font-size: 2.4rem;
+  letter-spacing: 0.04em;
+}
+
+.explore-tile-info {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  gap: 0.1rem;
+  padding: 1.5rem 0.6rem 0.5rem;
+  background: linear-gradient(to top, rgba(var(--ink-rgb), 0.75), transparent);
+}
+
+.explore-tile-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.explore-tile-facts {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.saved-page {
+  width: 100%;
+  max-width: 935px;
+  min-width: 0;
+  margin: 0 auto;
+  display: grid;
+  gap: 1rem;
+}
+
+.saved-title {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+@media (max-width: 720px) {
+  .explore-grid {
+    gap: 2px;
+  }
+
+  .explore-tile {
+    border-radius: 0;
+  }
+
+  .explore-tile-info {
+    padding: 1rem 0.4rem 0.35rem;
+  }
+
+  .explore-tile-name {
+    font-size: 0.72rem;
+  }
+
+  .explore-tile-facts {
+    font-size: 0.66rem;
+  }
 }

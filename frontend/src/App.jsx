@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/AuthProvider";
 import AppFooter from "./components/AppFooter";
 import AppHeader from "./components/AppHeader";
+import BottomNav from "./components/BottomNav";
 import RequireAuth from "./components/RequireAuth";
 import AdminPage from "./pages/AdminPage";
 import BookingPage from "./pages/BookingPage";
@@ -16,6 +17,7 @@ import ProviderDashboardPage from "./pages/ProviderDashboardPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import ProviderProfile from "./pages/ProviderProfile";
 import RegisterPage from "./pages/RegisterPage";
+import SavedPage from "./pages/SavedPage";
 import TermsPage from "./pages/TermsPage";
 
 /*
@@ -29,6 +31,7 @@ function MainLayout({ children }) {
       <AppHeader />
       <main>{children}</main>
       <AppFooter />
+      <BottomNav />
     </div>
   );
 }
@@ -52,6 +55,7 @@ function App() {
             Driving instructors live at /instructors/:instructorId. */}
         <Route path="/providers/:providerId" element={<MainLayout><ProviderProfile /></MainLayout>} />
         <Route path="/booking" element={<MainLayout><RequireAuth role="user"><BookingPage /></RequireAuth></MainLayout>} />
+        <Route path="/saved" element={<MainLayout><SavedPage /></MainLayout>} />
         <Route path="/contact" element={<MainLayout><ContactPage /></MainLayout>} />
         <Route path="/terms" element={<MainLayout><TermsPage /></MainLayout>} />
         <Route path="/privacy" element={<MainLayout><PrivacyPage /></MainLayout>} />
