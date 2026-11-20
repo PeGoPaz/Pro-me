@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 
 import InstructorProfile from "../models/InstructorProfile.js";
-import { GALLERY_LIMIT, addToGallery, checkPhotoEdits, removeFromGallery } from "../utils/gallery.js";
+import { CAPTION_MAX, POST_LIMIT, addPost, checkPhotoEdits, editCaption, galleryToPosts, newestFirst, removePost } from "../utils/posts.js";
 import { publicIdFromUrl, sniffImageType } from "../utils/photos.js";
 
 const bytes = (...values) => Buffer.concat([Buffer.from(values), Buffer.alloc(16)]);
@@ -48,28 +48,51 @@ describe("publicIdFromUrl", () => {
 });
 
 describe("checkPhotoEdits", () => {
-  const ours = ["https://res.cloudinary.com/ourcloud/image/upload/v1/a.jpg", "https://res.cloudinary.com/ourcloud/image/upload/v1/b.jpg"];
+  const ours = [
+    { url: "https://res.cloudinary.com/ourcloud/image/upload/v1/a.jpg" },
+    { url: "https://res.cloudinary.com/ourcloud/image/upload/v1/b.jpg" },
+  ];
 
-  it("allows reordering and choosing one of the photos", () => {
-    assert.equal(checkPhotoEdits({ gallery: [ours[1], ours[0]], profilePhotoUrl: ours[1] }, ours), null);
+  it("allows choosing the photo of one of your posts, or none", () => {
+    assert.equal(checkPhotoEdits({ profilePhotoUrl: ours[1].url }, ours), null);
     assert.equal(checkPhotoEdits({ profilePhotoUrl: "" }, ours), null);
     assert.equal(checkPhotoEdits({}, ours), null);
   });
 
-  it("refuses a URL that was not uploaded", () => {
-    assert.match(checkPhotoEdits({ gallery: [ours[0], "https://example.com/x.jpg"] }, ours), /only reorder/);
-    assert.match(checkPhotoEdits({ profilePhotoUrl: "https://example.com/me.jpg" }, ours), /one of your gallery photos/);
+  it("refuses a URL that was not posted", () => {
+    assert.match(checkPhotoEdits({ profilePhotoUrl: "https://example.com/me.jpg" }, ours), /one of your posts/);
+    assert.match(checkPhotoEdits({ profilePhotoUrl: ours[0].url }, []), /one of your posts/);
   });
 
-  it("leaves adding and removing to the gallery endpoints", () => {
-    assert.match(checkPhotoEdits({ gallery: [ours[0]] }, ours), /only reorder/);
-    assert.match(checkPhotoEdits({ gallery: [ours[0], ours[0]] }, ours), /only reorder/);
-    assert.match(checkPhotoEdits({ gallery: "a.jpg" }, ours), /only reorder/);
-    assert.match(checkPhotoEdits({ gallery: [ours[0]] }, []), /only reorder/);
+  it("leaves posting and removing to the posts endpoints", () => {
+    assert.match(checkPhotoEdits({ posts: [] }, ours), /POST, captioned with PATCH/);
+    assert.match(checkPhotoEdits({ gallery: [ours[0].url] }, ours), /POST, captioned with PATCH/);
   });
 });
 
-describe("gallery", () => {
+describe("newestFirst and galleryToPosts", () => {
+  it("orders posts by when they went up, newest first, without changing the list it was given", () => {
+    const posts = [
+      { url: "a", postedAt: new Date("2026-11-01") },
+      { url: "c", postedAt: new Date("2026-11-03") },
+      { url: "b", postedAt: new Date("2026-11-02") },
+    ];
+    assert.deepEqual(newestFirst(posts).map((post) => post.url), ["c", "b", "a"]);
+    assert.deepEqual(posts.map((post) => post.url), ["a", "c", "b"]);
+    assert.deepEqual(newestFirst(undefined), []);
+  });
+
+  it("turns an old gallery into posts that keep its order and have no captions", () => {
+    const when = new Date("2026-10-24T15:00:00Z");
+    const posts = galleryToPosts(["first.jpg", "second.jpg", "", 42], when);
+    assert.deepEqual(posts.map((post) => [post.url, post.caption]), [["first.jpg", ""], ["second.jpg", ""]]);
+    assert.deepEqual(newestFirst(posts).map((post) => post.url), ["first.jpg", "second.jpg"]);
+    assert.equal(posts[0].postedAt.getTime(), when.getTime());
+    assert.deepEqual(galleryToPosts(undefined), []);
+  });
+});
+
+describe("posts", () => {
   let memoryServer;
   let userId;
 
@@ -98,43 +121,65 @@ describe("gallery", () => {
   });
 
   const photo = (n) => `https://res.cloudinary.com/ourcloud/image/upload/v1/pro-me/gallery/x/${n}.jpg`;
+  const stored = async () => (await InstructorProfile.findOne({ userId }).lean()).posts;
 
-  it("adds photos up to the limit and no further", async () => {
-    for (let n = 0; n < GALLERY_LIMIT; n++) {
-      assert.equal((await addToGallery(userId, photo(n))).length, n + 1);
-    }
-    assert.equal(await addToGallery(userId, photo("extra")), null);
+  it("posts a photo with its caption, trimmed, and the time it went up", async () => {
+    const when = new Date("2026-11-20T10:00:00Z");
+    const post = await addPost(userId, { url: photo(0), caption: "  The Yaris  " }, when);
+    assert.equal(post.url, photo(0));
+    assert.equal(post.caption, "The Yaris");
+    assert.equal(post.postedAt.getTime(), when.getTime());
+    assert.ok(post._id);
+  });
+
+  it("cuts a caption that is too long rather than refusing the photo", async () => {
+    const post = await addPost(userId, { url: photo(0), caption: "x".repeat(CAPTION_MAX + 50) });
+    assert.equal(post.caption.length, CAPTION_MAX);
+  });
+
+  it("adds posts up to the limit and no further", async () => {
+    for (let n = 0; n < POST_LIMIT; n++) assert.ok(await addPost(userId, { url: photo(n) }));
+    assert.equal(await addPost(userId, { url: photo("extra") }), null);
+    assert.equal((await stored()).length, POST_LIMIT);
   });
 
   it("lets only one of two uploads racing for the last place in", async () => {
-    for (let n = 0; n < GALLERY_LIMIT - 1; n++) await addToGallery(userId, photo(n));
-
-    const results = await Promise.all([addToGallery(userId, photo("a")), addToGallery(userId, photo("b"))]);
+    for (let n = 0; n < POST_LIMIT - 1; n++) await addPost(userId, { url: photo(n) });
+    const results = await Promise.all([addPost(userId, { url: photo("a") }), addPost(userId, { url: photo("b") })]);
     assert.equal(results.filter(Boolean).length, 1);
-    const stored = await InstructorProfile.findOne({ userId }).lean();
-    assert.equal(stored.gallery.length, GALLERY_LIMIT);
+    assert.equal((await stored()).length, POST_LIMIT);
   });
 
-  it("has nowhere to add to without a profile", async () => {
-    assert.equal(await addToGallery(new mongoose.Types.ObjectId(), photo(0)), null);
+  it("has nowhere to post without a profile", async () => {
+    assert.equal(await addPost(new mongoose.Types.ObjectId(), { url: photo(0) }), null);
+  });
+
+  it("changes the caption of your own post only", async () => {
+    const post = await addPost(userId, { url: photo(0), caption: "Old" });
+    assert.equal((await editCaption(userId, post._id, " New ")).caption, "New");
+    assert.equal((await stored())[0].caption, "New");
+    assert.equal(await editCaption(new mongoose.Types.ObjectId(), post._id, "Hijacked"), null);
+    assert.equal(await editCaption(userId, new mongoose.Types.ObjectId(), "Nothing"), null);
+    assert.equal((await stored())[0].caption, "New");
+  });
+
+  it("removes only a post that is yours, and returns what it removed", async () => {
+    const first = await addPost(userId, { url: photo(0) });
+    const second = await addPost(userId, { url: photo(1) });
+    assert.equal((await removePost(userId, first._id)).url, photo(0));
+    assert.equal(await removePost(userId, first._id), null);
+    assert.equal(await removePost(new mongoose.Types.ObjectId(), second._id), null);
+    assert.deepEqual((await stored()).map((post) => post.url), [photo(1)]);
   });
 
   it("clears the profile photo when it is the photo removed", async () => {
-    await addToGallery(userId, photo(0));
-    await addToGallery(userId, photo(1));
+    const first = await addPost(userId, { url: photo(0) });
+    const second = await addPost(userId, { url: photo(1) });
     await InstructorProfile.updateOne({ userId }, { $set: { profilePhotoUrl: photo(0) } });
 
-    await removeFromGallery(userId, photo(1));
+    await removePost(userId, second._id);
     assert.equal((await InstructorProfile.findOne({ userId }).lean()).profilePhotoUrl, photo(0));
-    await removeFromGallery(userId, photo(0));
+    await removePost(userId, first._id);
     assert.equal((await InstructorProfile.findOne({ userId }).lean()).profilePhotoUrl, "");
-  });
-
-  it("removes only a photo that is in the gallery", async () => {
-    await addToGallery(userId, photo(0));
-    await addToGallery(userId, photo(1));
-    assert.deepEqual(await removeFromGallery(userId, photo(0)), [photo(1)]);
-    assert.equal(await removeFromGallery(userId, photo(0)), null);
-    assert.equal(await removeFromGallery(new mongoose.Types.ObjectId(), photo(1)), null);
   });
 });

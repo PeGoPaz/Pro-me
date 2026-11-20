@@ -4554,7 +4554,8 @@ details[open] .contact-faq-q::after {
 .ip-lightbox {
   position: fixed;
   inset: 0;
-  z-index: 70;
+  /* Above the sticky top bar (200), which otherwise sat on the dark overlay. */
+  z-index: 300;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4563,11 +4564,33 @@ details[open] .contact-faq-q::after {
   cursor: zoom-out;
 }
 
+.ip-lightbox-figure {
+  margin: 0;
+  max-width: min(100%, 900px);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 .ip-lightbox-img {
   max-width: 100%;
-  max-height: 100%;
+  max-height: calc(100vh - 9rem);
   border-radius: 8px;
   object-fit: contain;
+}
+
+.ip-lightbox-caption {
+  color: var(--on-primary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.ip-lightbox-date {
+  display: block;
+  margin-top: 0.2rem;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.8rem;
 }
 
 /* ── reviews ─────────────────────────────────────────────────────────── */
@@ -4905,26 +4928,45 @@ details[open] .contact-faq-q::after {
 /* Onboarding photos */
 .ob-gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 0.6rem;
   list-style: none;
   padding: 0;
   margin: 0.75rem 0;
 }
 
+/* A post: its photo, square like the grid on the profile, and its caption. */
 .ob-gallery-item {
   position: relative;
-  aspect-ratio: 1;
-  border-radius: 10px;
-  overflow: hidden;
-  background: var(--surface-2);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .ob-gallery-item img {
   width: 100%;
-  height: 100%;
+  aspect-ratio: 1;
   object-fit: cover;
   display: block;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.ob-post-caption {
+  width: 100%;
+  resize: vertical;
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.ob-post-caption:focus {
+  outline: 2px solid var(--primary-line);
+  border-color: var(--primary);
 }
 
 .ob-gallery-remove {
@@ -4954,11 +4996,9 @@ details[open] .contact-faq-q::after {
 
 .ob-gallery-tools {
   position: absolute;
+  top: 0.35rem;
   left: 0.35rem;
-  right: 0.35rem;
-  bottom: 0.35rem;
   display: flex;
-  justify-content: space-between;
 }
 
 .ob-gallery-tools button {

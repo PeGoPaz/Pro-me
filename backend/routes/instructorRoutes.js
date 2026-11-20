@@ -6,7 +6,7 @@ import User from "../models/User.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { ratingStats, reviewStatsFor, visibleReviewsLookup } from "../utils/reviews.js";
 import { responseTimeFor, responseTimesFor } from "../utils/responseTime.js";
-import { GALLERY_LIMIT, addToGallery, checkPhotoEdits, galleryFolder, removeFromGallery } from "../utils/gallery.js";
+import { POST_LIMIT, addPost, checkPhotoEdits, editCaption, postsFolder, removePost } from "../utils/posts.js";
 import { GALLERY_PHOTO, deletePhoto, publicIdFromUrl, receivePhoto, uploadPhoto } from "../utils/photos.js";
 import { COUNTY_SLUGS } from "../data/counties.js";
 import { TEST_CENTRE_SLUGS } from "../data/testCentres.js";
@@ -203,56 +203,80 @@ router.get("/me", async (req, res) => {
   }
 });
 
-/* ── POST /api/instructors/me/gallery — add one photo ──────────────────────
-   multipart/form-data with the file in "photo". */
-router.post("/me/gallery", receivePhoto, async (req, res) => {
+/* A post as the owner and everyone else sees it. */
+const postView = (post) => ({ id: post._id, url: post.url, caption: post.caption, postedAt: post.postedAt });
+
+/* ── POST /api/instructors/me/posts — post one photo ───────────────────────
+   multipart/form-data: the file in "photo", an optional "caption". */
+router.post("/me/posts", receivePhoto, async (req, res) => {
   const userId = req.session.user.id;
   try {
-    const profile = await InstructorProfile.findOne({ userId }).select("gallery").lean();
+    const profile = await InstructorProfile.findOne({ userId }).select("posts").lean();
     if (!profile) {
-      return res.status(404).json({ message: "Create your profile before adding photos" });
+      return res.status(404).json({ message: "Create your profile before posting photos" });
     }
-    if (profile.gallery.length >= GALLERY_LIMIT) {
-      return res.status(409).json({ message: `Your gallery already has ${GALLERY_LIMIT} photos` });
+    if ((profile.posts ?? []).length >= POST_LIMIT) {
+      return res.status(409).json({ message: `You already have ${POST_LIMIT} posts; remove one to post another` });
     }
 
-    const { url, publicId } = await uploadPhoto(req.file.buffer, { folder: galleryFolder(userId), ...GALLERY_PHOTO });
+    const { url, publicId } = await uploadPhoto(req.file.buffer, { folder: postsFolder(userId), ...GALLERY_PHOTO });
 
-    const gallery = await addToGallery(userId, url);
-    if (!gallery) {
-      /* Another upload filled the last place while this one was in flight. */
+    const post = await addPost(userId, { url, caption: req.body?.caption ?? "" });
+    if (!post) {
+      /* Another upload took the last place while this one was in flight. */
       await deletePhoto(publicId).catch(() => {});
-      return res.status(409).json({ message: `Your gallery already has ${GALLERY_LIMIT} photos` });
+      return res.status(409).json({ message: `You already have ${POST_LIMIT} posts; remove one to post another` });
     }
 
-    return res.status(201).json({ url, gallery });
+    return res.status(201).json({ post: postView(post) });
   } catch (error) {
-    console.error("Gallery upload error:", error.message);
-    return res.status(502).json({ message: "The photo could not be uploaded. Please try again." });
+    console.error("Post upload error:", error.message);
+    return res.status(502).json({ message: "The photo could not be posted. Please try again." });
   }
 });
 
-/* ── DELETE /api/instructors/me/gallery?url=… — remove one photo ───────── */
-router.delete("/me/gallery", async (req, res) => {
-  const userId = req.session.user.id;
+/* ── PATCH /api/instructors/me/posts/:postId — change a caption ─────────── */
+router.patch("/me/posts/:postId", async (req, res) => {
+  const { postId } = req.params;
+  if (!mongoose.isValidObjectId(postId)) {
+    return res.status(404).json({ message: "You have no such post" });
+  }
   try {
-    const url = String(req.query.url ?? "");
-    const gallery = await removeFromGallery(userId, url);
-    if (!gallery) {
-      return res.status(404).json({ message: "That photo is not in your gallery" });
+    const post = await editCaption(req.session.user.id, postId, req.body?.caption);
+    if (!post) {
+      return res.status(404).json({ message: "You have no such post" });
+    }
+    return res.json({ post: postView(post) });
+  } catch (error) {
+    console.error("Caption update error:", error.message);
+    return res.status(500).json({ message: "Failed to save the caption" });
+  }
+});
+
+/* ── DELETE /api/instructors/me/posts/:postId — remove a post ───────────── */
+router.delete("/me/posts/:postId", async (req, res) => {
+  const userId = req.session.user.id;
+  const { postId } = req.params;
+  if (!mongoose.isValidObjectId(postId)) {
+    return res.status(404).json({ message: "You have no such post" });
+  }
+  try {
+    const removed = await removePost(userId, postId);
+    if (!removed) {
+      return res.status(404).json({ message: "You have no such post" });
     }
 
     /* Only our own uploads in this instructor's folder are deleted from
-       Cloudinary; anything else just leaves the gallery. */
-    const publicId = publicIdFromUrl(url);
-    if (publicId?.startsWith(`${galleryFolder(userId)}/`)) {
+       Cloudinary; anything else just leaves the profile. */
+    const publicId = publicIdFromUrl(removed.url);
+    if (publicId?.startsWith(`${postsFolder(userId)}/`)) {
       await deletePhoto(publicId).catch((error) => console.error("Cloudinary delete error:", error.message));
     }
 
-    return res.json({ gallery });
+    return res.json({ removed: postView(removed) });
   } catch (error) {
-    console.error("Gallery delete error:", error.message);
-    return res.status(500).json({ message: "Failed to remove the photo" });
+    console.error("Post delete error:", error.message);
+    return res.status(500).json({ message: "Failed to remove the post" });
   }
 });
 
@@ -272,7 +296,7 @@ router.put("/me", async (req, res) => {
 
     const {
       adiNumber, counties, testCentres, licenceCategories, transmission,
-      headline, bio, profilePhotoUrl, gallery, pricePerLesson,
+      headline, bio, profilePhotoUrl, posts, gallery, pricePerLesson,
       lessonsDone, acceptingNewStudents, isPublished, phone, declarations,
     } = req.body;
 
@@ -320,9 +344,9 @@ router.put("/me", async (req, res) => {
       }
     }
 
-    /* Photos are uploaded through /me/gallery; here they can only be
-       reordered, or one of them made the profile photo. */
-    const photoError = checkPhotoEdits({ gallery, profilePhotoUrl }, existing?.gallery ?? []);
+    /* Photos are posted through /me/posts; here one of them can only be
+       made the profile photo. */
+    const photoError = checkPhotoEdits({ posts, gallery, profilePhotoUrl }, existing?.posts ?? []);
     if (photoError) {
       return res.status(400).json({ message: photoError });
     }
@@ -336,7 +360,6 @@ router.put("/me", async (req, res) => {
       ...(headline !== undefined ? { headline: String(headline).trim() } : {}),
       ...(bio !== undefined ? { bio: String(bio).trim() } : {}),
       ...(profilePhotoUrl !== undefined ? { profilePhotoUrl } : {}),
-      ...(Array.isArray(gallery) ? { gallery } : {}),
       ...(pricePerLesson !== undefined ? { pricePerLesson } : {}),
       ...(acceptingNewStudents !== undefined
         ? { acceptingNewStudents: Boolean(acceptingNewStudents) }

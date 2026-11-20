@@ -55,7 +55,11 @@ const SAMPLE_INSTRUCTORS = [
     pricePerLesson: 45, lessonsDone: 4200, verified: true, accepting: true,
     headline: "Patient with nervous beginners",
     bio: "Fifteen years teaching in north Dublin. I specialise in nervous and\nmature learners, and I will never shout at you at a roundabout.\n\nAutomatic and manual, pick-up anywhere inside the M50.",
-    gallery: 3,
+    posts: [
+      "First lesson done, and nobody shouted at a roundabout.",
+      "The car for automatic lessons: a 2024 Toyota Yaris hybrid.",
+      "Finglas test centre car park, where most of my mock tests finish.",
+    ],
   },
   {
     name: "Cian Murphy", adiNumber: "ADI-20984",
@@ -64,7 +68,7 @@ const SAMPLE_INSTRUCTORS = [
     pricePerLesson: 40, lessonsDone: 180, verified: false, accepting: true,
     headline: "Evenings and weekends",
     bio: "Full-time job during the week, so I teach evenings and Saturdays.\nManual only. Happy to do motorway lessons once you are ready.",
-    gallery: 0,
+    posts: [],
   },
   {
     name: "Niamh Walsh", adiNumber: "ADI-33112",
@@ -73,7 +77,10 @@ const SAMPLE_INSTRUCTORS = [
     pricePerLesson: 50, lessonsDone: 120, verified: true, accepting: false,
     headline: "Automatic only, Cork city",
     bio: "Automatic tuition around Cork city and the Wilton test route.\nCurrently full — please check back in a few weeks.",
-    gallery: 2,
+    posts: [
+      "Another first-time pass at Wilton this morning.",
+      "Cork city at 7am: the best time to practise hill starts.",
+    ],
   },
   {
     name: "Darragh Kelly", adiNumber: "ADI-44820",
@@ -82,7 +89,7 @@ const SAMPLE_INSTRUCTORS = [
     pricePerLesson: 75, lessonsDone: 60, verified: false, accepting: true,
     headline: "Truck and bus categories",
     bio: "C, C1 and D1 tuition out of Galway. Also do CPC preparation.",
-    gallery: 0,
+    posts: [],
   },
 ];
 
@@ -110,13 +117,14 @@ for (const sample of SAMPLE_INSTRUCTORS) {
     acceptingNewStudents: sample.accepting,
     headline: sample.headline,
     bio: sample.bio,
-    /* Placeholder images, so the gallery grid can be seen working before the
-       real upload pipeline exists. Deterministic seeds keep them stable
-       across restarts. */
-    gallery: Array.from(
-      { length: sample.gallery },
-      (_, i) => `https://picsum.photos/seed/${firstName}${i}/600/600`
-    ),
+    /* Placeholder images with real-looking captions, so posts can be seen
+       without uploading anything; a day apart, newest first. Deterministic
+       seeds keep the images stable across restarts. */
+    posts: sample.posts.map((caption, i) => ({
+      url: `https://picsum.photos/seed/${firstName}${i}/600/600`,
+      caption,
+      postedAt: new Date(now.getTime() - (i + 1) * 26 * 60 * 60 * 1000),
+    })),
     isPublished: true,
     profileCompleteness: 85,
     verification: { status: sample.verified ? "verified" : "unverified" },

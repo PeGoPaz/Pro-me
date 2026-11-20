@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import api from "../api/index.js";
 import { useAuth } from "../context/auth";
-import { GALLERY_LIMIT, removeGalleryPhoto, uploadAvatar, uploadGalleryPhoto } from "../api/photos.js";
+import { POST_LIMIT, createPost, deletePost, editPostCaption, uploadAvatar } from "../api/photos.js";
 import { formatIrishPhone } from "../utils/formatPhone";
 import {
   StepAbout,
@@ -52,7 +52,7 @@ const EMPTY_DRAFT = {
   acceptingNewStudents: true,
   declarations: { adiConfirmed: false, holdsInsurance: false },
   isPublished: false,
-  gallery: [],
+  posts: [],
   profilePhotoUrl: "",
 };
 
@@ -74,7 +74,7 @@ const toDraft = (profile) => ({
     holdsInsurance: Boolean(profile.declarations?.holdsInsuranceAt),
   },
   isPublished: Boolean(profile.isPublished),
-  gallery: profile.gallery ?? [],
+  posts: profile.posts ?? [],
   profilePhotoUrl: profile.profilePhotoUrl ?? "",
 });
 
@@ -273,18 +273,21 @@ function InstructorOnboardingPage() {
     }
   };
 
-  /* One upload at a time, in the order chosen, and no more than still fit. */
+  /* One upload at a time, in the order chosen, and no more than still fit.
+     Each photo is posted straight away, without a caption; captions are
+     written under each post and saved when the field is left. */
   const handleAddPhotos = async (files) => {
-    const room = GALLERY_LIMIT - draft.gallery.length;
+    const room = POST_LIMIT - draft.posts.length;
     const batch = files.slice(0, room);
     for (let index = 0; index < batch.length; index++) {
-      setMediaState({ busy: `Uploading ${index + 1} of ${batch.length}…`, error: "" });
+      setMediaState({ busy: `Posting ${index + 1} of ${batch.length}…`, error: "" });
       try {
-        setField("gallery", await uploadGalleryPhoto(batch[index]));
+        const post = await createPost(batch[index]);
+        setField("posts", (current) => [post, ...current]);
       } catch (err) {
         setMediaState({
           busy: "",
-          error: err?.response?.data?.message || err?.message || "Could not upload the photo.",
+          error: err?.response?.data?.message || err?.message || "Could not post the photo.",
         });
         return;
       }
@@ -292,25 +295,38 @@ function InstructorOnboardingPage() {
     setMediaState({
       busy: "",
       error: files.length > room
-        ? `Only ${room} more ${room === 1 ? "photo fits" : "photos fit"}; the rest were left out.`
+        ? `Only ${room} more ${room === 1 ? "post fits" : "posts fit"}; the rest were left out.`
         : "",
     });
   };
 
-  const handleRemovePhoto = async (url) => {
+  const handleRemovePost = async (post) => {
     setMediaState({ busy: "Removing…", error: "" });
     try {
-      setField("gallery", await removeGalleryPhoto(url));
+      await deletePost(post.id);
+      setField("posts", (current) => current.filter((item) => item.id !== post.id));
       /* The server stops using it as the profile photo too. */
-      setField("profilePhotoUrl", (current) => (current === url ? "" : current));
+      setField("profilePhotoUrl", (current) => (current === post.url ? "" : current));
       setMediaState({ busy: "", error: "" });
     } catch (err) {
-      setMediaState({ busy: "", error: err?.response?.data?.message || "Could not remove the photo." });
+      setMediaState({ busy: "", error: err?.response?.data?.message || "Could not remove the post." });
     }
   };
 
-  /* Reordering and choosing the profile photo go through PUT /me, which only
-     accepts photos already in the gallery. Saved straight away, like uploads. */
+  const handleCaption = async (post, caption) => {
+    if (caption.trim() === post.caption) return;
+    setMediaState({ busy: "Saving the caption…", error: "" });
+    try {
+      const saved = await editPostCaption(post.id, caption);
+      setField("posts", (current) => current.map((item) => (item.id === saved.id ? saved : item)));
+      setMediaState({ busy: "", error: "" });
+    } catch (err) {
+      setMediaState({ busy: "", error: err?.response?.data?.message || "Could not save the caption." });
+    }
+  };
+
+  /* Choosing the profile photo goes through PUT /me, which only accepts the
+     photo of one of the instructor's posts. Saved straight away. */
   const savePhotoChange = async (payload, busyLabel) => {
     setMediaState({ busy: busyLabel, error: "" });
     try {
@@ -319,14 +335,6 @@ function InstructorOnboardingPage() {
     } catch (err) {
       setMediaState({ busy: "", error: err?.response?.data?.message || "Could not save the change." });
     }
-  };
-
-  const handleMovePhoto = (index, offset) => {
-    const target = index + offset;
-    if (target < 0 || target >= draft.gallery.length) return;
-    const order = [...draft.gallery];
-    [order[index], order[target]] = [order[target], order[index]];
-    savePhotoChange({ gallery: order }, "Saving the order…");
   };
 
   const handleProfilePhoto = (url) => {
@@ -404,8 +412,8 @@ function InstructorOnboardingPage() {
               media={{
                 ...mediaState,
                 onAdd: handleAddPhotos,
-                onRemove: handleRemovePhoto,
-                onMove: handleMovePhoto,
+                onRemove: handleRemovePost,
+                onCaption: handleCaption,
                 onChooseProfile: handleProfilePhoto,
               }}
             />

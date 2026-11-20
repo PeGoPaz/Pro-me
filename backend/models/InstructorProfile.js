@@ -21,6 +21,14 @@ import {
  * register.
  */
 
+/* One photo an instructor has posted. Its _id is how the owner captions or
+   removes it; its url is what the profile photo may point at. */
+const postSchema = new mongoose.Schema({
+  url: { type: String, required: true, trim: true },
+  caption: { type: String, trim: true, maxlength: 500, default: "" },
+  postedAt: { type: Date, default: Date.now },
+});
+
 const instructorProfileSchema = new mongoose.Schema(
   {
     userId: {
@@ -86,14 +94,15 @@ const instructorProfileSchema = new mongoose.Schema(
 
     profilePhotoUrl: { type: String, trim: true, default: "" },
 
-    /* Capped so one profile cannot balloon the document. Real uploads go to
-       Cloudinary; this holds the resulting URLs, never base64. */
-    gallery: {
-      type: [String],
+    /* An instructor's photos, each with a caption and when it went up; shown
+       newest first. Capped so one profile cannot balloon the document. Real
+       uploads go to Cloudinary; this holds the resulting URLs, never base64. */
+    posts: {
+      type: [postSchema],
       default: [],
       validate: {
-        validator: (values) => values.length <= 12,
-        message: "gallery can hold at most 12 photos",
+        validator: (values) => values.length <= 24,
+        message: "an instructor can have at most 24 posts",
       },
     },
 

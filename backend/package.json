@@ -11,7 +11,8 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "dev:memory": "node scripts/devServer.mjs",
-    "make-admin": "node scripts/makeAdmin.mjs"
+    "make-admin": "node scripts/makeAdmin.mjs",
+    "migrate:posts": "node scripts/migrateGalleryToPosts.mjs"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

@@ -30,8 +30,8 @@ are its sample data.
 - **Instructor search**: filter by county, RSA test centre, licence category, transmission, price and whether they are taking students
 - **Trust-first ranking**: verified instructors first, then profile completeness and review count. Self-reported lesson counts never affect ranking and are always labelled as self-reported
 - **RSA-grounded reference data**: 26 counties and all 62 test centres, imported from the RSA's own register with Eircodes, coordinates and the categories each centre tests
-- **Instructor profiles**: photo, ADI verification badge, coverage, category badges, bio, gallery and reviews
-- **Photo uploads**: instructors upload a gallery of up to 12 photos, put them in order and choose their profile photo; everyone can upload an avatar. The type is checked from the file's bytes, not its name, and Cloudinary re-encodes every image, which strips EXIF data and GPS location
+- **Instructor profiles**: photo, ADI verification badge, coverage, category badges, bio, posts and reviews
+- **Posts**: instructors post up to 24 photos, each with a caption and the date it went up, shown newest first, and can make one of them their profile photo; everyone can upload an avatar. A database with profiles saved before posts existed is moved over once with `npm run migrate:posts` in `backend` (galleries become posts without captions, in the same order). The type is checked from the file's bytes, not its name, and Cloudinary re-encodes every image, which strips EXIF data and GPS location
 - **Response time**: the profile and search card say how quickly an instructor usually accepts or declines a lesson request - the median over recent requests, with ignored requests counted against them
 - **Reviews after a real lesson**: a learner can review an instructor only after a lesson the instructor confirmed and whose date has passed. Moving a confirmed lesson to a new date sends it back for confirmation
 - **Save and compare**: learners shortlist instructors (requires an account)
