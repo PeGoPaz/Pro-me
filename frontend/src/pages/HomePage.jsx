@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import HomeHero from "../components/HomeHero";
+import Feed from "../components/feed/Feed";
+import { useAuth } from "../context/auth";
 
 /*
  * The landing page.
@@ -10,8 +12,11 @@ import HomeHero from "../components/HomeHero";
  * filters (county, test centre, category, transmission) that a category
  * dropdown could never stand in for.
  *
- * What is left is the hero, a short explanation of why this exists next to the
- * RSA's own free register, and a way into the search.
+ * What is left is a feed: stories from the instructors who posted this week,
+ * then everyone's posts, newest first. A visitor who is not signed in sees the
+ * hero first, and after the feed a short explanation of why this exists next
+ * to the RSA's own free register; someone signed in already knows, and goes
+ * straight to the posts.
  */
 
 const TRUST_POINTS = [
@@ -30,11 +35,16 @@ const TRUST_POINTS = [
 ];
 
 function HomePage() {
+  const { user, loading } = useAuth();
+  const signedIn = Boolean(user);
+
   return (
     <>
-      <HomeHero />
+      {!loading && !signedIn && <HomeHero />}
 
-      <section className="home-trust">
+      <Feed />
+
+      {!loading && !signedIn && <section className="home-trust">
         <p className="overview-eyebrow">Why Pro.me</p>
         <h2 className="home-trust-title">
           The RSA register tells you who is approved.
@@ -59,7 +69,7 @@ function HomePage() {
             Join as an instructor
           </Link>
         </div>
-      </section>
+      </section>}
     </>
   );
 }

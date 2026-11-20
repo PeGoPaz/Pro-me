@@ -186,6 +186,8 @@ instructorProfileSchema.index({ testCentres: 1 });
 instructorProfileSchema.index({ licenceCategories: 1 });
 instructorProfileSchema.index({ transmission: 1 });
 instructorProfileSchema.index({ isPublished: 1, acceptingNewStudents: 1 });
+/* The home feed and stories: listed profiles' posts by when they went up. */
+instructorProfileSchema.index({ isPublished: 1, "posts.postedAt": -1 });
 /* Default ranking puts verified profiles first, then completeness. */
 instructorProfileSchema.index({ "verification.status": 1, profileCompleteness: -1 });
 instructorProfileSchema.index({ "subscription.status": 1 });
