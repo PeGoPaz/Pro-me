@@ -15,19 +15,22 @@ product direction. That file is the source of truth, not this one.
 Taken from the in-memory dev server (`npm run dev:memory`), so the instructors
 are its sample data.
 
-| Search | Instructor profile |
+| Explore | Instructor profile |
 |---|---|
-| ![Search results: verified instructors first, with ratings, response times, coverage and price](docs/screenshots/search.png) | ![An instructor's profile: verified badge, rating, lessons, typical reply time, coverage and lesson request](docs/screenshots/profile.png) |
+| ![Explore: listed instructors as square tiles showing their latest post, verified badge, rating and price, with the filters alongside](docs/screenshots/search.png) | ![An instructor's profile laid out like a social profile: photo ringed in amber, posts, rating and lessons, highlights and tabs](docs/screenshots/profile.png) |
 | **Instructor onboarding** | **Admin: reported content** |
 | ![Step 1 of the six-step onboarding wizard](docs/screenshots/onboarding.png) | ![The report queue, where every decision needs a statement of reasons](docs/screenshots/admin-reports.png) |
 
 <p align="center">
-  <img src="docs/screenshots/phone-profile.png" width="280" alt="The instructor profile on a phone">
+  <img src="docs/screenshots/phone-home.png" width="280" alt="The home page on a phone for a signed-in learner: stories, the feed of posts and the tab bar along the bottom">
+  &nbsp;
+  <img src="docs/screenshots/phone-profile.png" width="280" alt="An instructor's profile on a phone">
 </p>
 
 ## Features
 
-- **Instructor search**: filter by county, RSA test centre, licence category, transmission, price and whether they are taking students
+- **Explore**: every listed instructor as a square tile showing their latest post, or a list with the full details; the choice is kept in the address, so a shared link opens the same view. Filter by county, RSA test centre, licence category, transmission, price and whether they are taking students; on a phone the filters fold away above the results
+- **Moves like an app on a phone**: a tab bar along the bottom - Home, Explore, Saved and your account - with the current tab marked for screen readers as well as by colour
 - **Trust-first ranking**: verified instructors first, then profile completeness and review count. Self-reported lesson counts never affect ranking and are always labelled as self-reported
 - **RSA-grounded reference data**: 26 counties and all 62 test centres, imported from the RSA's own register with Eircodes, coordinates and the categories each centre tests
 - **Home feed and stories**: the home page shows every listed instructor's posts, newest first, paged with a cursor so new posts never repeat one already seen; above it, stories from the instructors who posted this week, with a grey ring once watched (remembered in the browser only)
@@ -35,7 +38,7 @@ are its sample data.
 - **Posts**: instructors post up to 24 photos, each with a caption and the date it went up, shown newest first, and can make one of them their profile photo; everyone can upload an avatar. A database with profiles saved before posts existed is moved over once with `npm run migrate:posts` in `backend` (galleries become posts without captions, in the same order). The type is checked from the file's bytes, not its name, and Cloudinary re-encodes every image, which strips EXIF data and GPS location
 - **Response time**: the profile and search card say how quickly an instructor usually accepts or declines a lesson request - the median over recent requests, with ignored requests counted against them
 - **Reviews after a real lesson**: a learner can review an instructor only after a lesson the instructor confirmed and whose date has passed. Moving a confirmed lesson to a new date sends it back for confirmation
-- **Save and compare**: learners shortlist instructors (requires an account)
+- **Save and compare**: learners shortlist instructors (requires an account) and find them again on the Saved tab, in the same grid as Explore
 - **Lesson requests**: a learner requests a lesson from an instructor, who accepts or declines. The platform never handles lesson money — learners pay instructors directly
 - **Reporting**: anyone can report a profile or review, signed in or not (DSA Article 16). A moderator can take a reported profile off the listing or hide a reported review, always with a statement of reasons (Article 17). The author of a hidden review still sees it on their dashboard, with those reasons
 - **Account deletion**: a departing learner's reviews are anonymised rather than deleted, because a review is also about the instructor
