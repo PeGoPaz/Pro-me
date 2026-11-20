@@ -4255,20 +4255,6 @@ details[open] .contact-faq-q::after {
   background: var(--primary);
 }
 
-/* ── Instructor profile page ──────────────────────────────────────────────
-   Instagram-ish per the roadmap: one large photo, a simple stat row, a photo
-   grid. Mobile-first — the header stacks on a phone and goes horizontal once
-   there is room. */
-.ip-page {
-  width: 100%;
-  /* main is a grid container; grid items default to min-width:auto and will
-     not shrink below their content without this. */
-  min-width: 0;
-  max-width: 54rem;
-  margin: 0 auto;
-  padding: 2rem 1rem 3rem;
-}
-
 .ip-state {
   max-width: 34rem;
   margin: 0 auto;
@@ -4284,115 +4270,10 @@ details[open] .contact-faq-q::after {
   color: var(--ink);
 }
 
-/* ── header ──────────────────────────────────────────────────────────── */
-.ip-header {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--line);
-}
-
-@media (min-width: 42rem) {
-  .ip-header {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 1.75rem;
-  }
-}
-
-.ip-avatar {
-  flex: 0 0 auto;
-  width: 6.5rem;
-  height: 6.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--surface-2);
-  overflow: hidden;
-}
-
-.ip-avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.ip-avatar-initials {
-  font-size: 1.9rem;
-  font-weight: 700;
-  color: var(--primary);
-}
-
-.ip-identity {
-  flex: 1;
-  min-width: 0;
-}
-
-.ip-name {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0 0 0.25rem;
-  font-size: 1.6rem;
-  font-weight: 700;
-}
-
-.ip-verified {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.18rem 0.5rem;
-  border-radius: 6px;
-  background: var(--primary-soft);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
-  color: var(--primary-strong);
-}
-
-.ip-headline {
-  margin: 0 0 0.9rem;
-  color: var(--muted);
-  line-height: 1.5;
-}
-
-.ip-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.75rem;
-}
-
 .ip-stat {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
-}
-
-.ip-stat-value {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--ink);
-}
-
-.ip-stat-value-muted {
-  color: var(--subtle);
-}
-
-.ip-stat-open {
-  color: var(--primary-strong);
-}
-
-.ip-stat-closed {
-  color: var(--accent-ink);
-}
-
-.ip-stat-label {
-  font-size: 0.78rem;
-  color: var(--muted);
 }
 
 .ip-unverified-note {
@@ -4404,69 +4285,6 @@ details[open] .contact-faq-q::after {
   font-size: 0.83rem;
   line-height: 1.5;
   color: var(--accent-ink);
-}
-
-.ip-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.6rem;
-}
-
-@media (min-width: 42rem) {
-  .ip-actions {
-    align-items: flex-end;
-  }
-}
-
-.ip-book {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.6rem 1.1rem;
-  border-radius: 9px;
-  background: var(--primary);
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: var(--on-primary);
-  text-decoration: none;
-}
-
-.ip-book:hover {
-  background: var(--primary);
-}
-
-.ip-save {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.55rem 1rem;
-  border: 1.5px solid var(--primary);
-  border-radius: 9px;
-  background: var(--surface);
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--primary);
-  cursor: pointer;
-  transition: background 0.18s, color 0.18s;
-}
-
-.ip-save-on {
-  background: var(--primary);
-  color: var(--on-primary);
-}
-
-.ip-price {
-  margin: 0;
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: var(--ink);
-}
-
-.ip-price-unit {
-  font-size: 0.82rem;
-  font-weight: 400;
-  color: var(--muted);
 }
 
 /* ── sections ────────────────────────────────────────────────────────── */
@@ -4509,88 +4327,6 @@ details[open] .contact-faq-q::after {
   margin: 0.75rem 0 0.35rem;
   font-size: 0.82rem;
   color: var(--subtle);
-}
-
-.ip-bio {
-  margin: 0;
-  line-height: 1.7;
-  color: var(--ink-2);
-  white-space: pre-line;
-}
-
-/* ── gallery ─────────────────────────────────────────────────────────── */
-.ip-gallery {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.3rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.ip-gallery-item {
-  display: block;
-  width: 100%;
-  padding: 0;
-  border: none;
-  background: var(--surface-2);
-  cursor: pointer;
-  /* Square cells, so a mixed set of photos still reads as a tidy grid. */
-  aspect-ratio: 1 / 1;
-  overflow: hidden;
-}
-
-.ip-gallery-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.25s;
-}
-
-.ip-gallery-item:hover img {
-  transform: scale(1.04);
-}
-
-.ip-lightbox {
-  position: fixed;
-  inset: 0;
-  /* Above the sticky top bar (200), which otherwise sat on the dark overlay. */
-  z-index: 300;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-  background: rgba(var(--ink-rgb), 0.88);
-  cursor: zoom-out;
-}
-
-.ip-lightbox-figure {
-  margin: 0;
-  max-width: min(100%, 900px);
-  max-height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.ip-lightbox-img {
-  max-width: 100%;
-  max-height: calc(100vh - 9rem);
-  border-radius: 8px;
-  object-fit: contain;
-}
-
-.ip-lightbox-caption {
-  color: var(--on-primary);
-  font-size: 0.95rem;
-  line-height: 1.5;
-}
-
-.ip-lightbox-date {
-  display: block;
-  margin-top: 0.2rem;
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 0.8rem;
 }
 
 /* ── reviews ─────────────────────────────────────────────────────────── */
@@ -5228,22 +4964,6 @@ details[open] .contact-faq-q::after {
   gap: 0.5rem;
 }
 
-/* Contact block on the public instructor profile */
-.ip-contact {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--primary);
-  text-decoration: none;
-}
-
-.ip-contact-locked {
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
 /* ── Admin queues ───────────────────────────────────────────────────────── */
 .adm-page {
   width: 100%;
@@ -5429,4 +5149,670 @@ details[open] .contact-faq-q::after {
 .adm-reject {
   border-color: var(--danger-line);
   color: var(--danger);
+}
+
+/* ── Instructor profile, Instagram-style ───────────────────────────────── */
+.ig-page {
+  width: 100%;
+  max-width: 935px;
+  /* A grid item of main: without this it grows to its widest row (the
+     highlights) and the page scrolls sideways on a phone. */
+  min-width: 0;
+  margin: 0 auto;
+}
+
+.ig-header {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 2rem 3rem;
+  align-items: start;
+  padding: 1rem 0 1.5rem;
+}
+
+/* The ring: amber into route green while they take new learners, a quiet line otherwise. */
+.ig-avatar {
+  width: 168px;
+  height: 168px;
+  border-radius: 50%;
+  padding: 4px;
+  background: var(--line-strong);
+  justify-self: center;
+}
+
+.ig-avatar-open {
+  background: conic-gradient(from 210deg, var(--accent), var(--primary), var(--accent));
+}
+
+.ig-avatar img,
+.ig-avatar-initials {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 4px solid var(--paper);
+  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-family: var(--font-brand);
+  font-size: 3rem;
+  letter-spacing: 0.04em;
+}
+
+.ig-identity {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.ig-name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ig-name {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.ig-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary-ink);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.ig-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 1rem;
+  color: var(--ink-2);
+}
+
+.ig-stats strong {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.ig-stat-link {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+}
+
+.ig-self-reported {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.ig-bio {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.ig-bio p {
+  margin: 0;
+}
+
+.ig-headline {
+  font-weight: 700;
+}
+
+.ig-bio-text {
+  white-space: pre-line;
+  color: var(--ink-2);
+}
+
+.ig-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+  color: var(--muted);
+}
+
+.ig-open {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.ig-closed {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.ig-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ig-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding: 0 1rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ig-button:hover {
+  background: var(--line);
+}
+
+.ig-button-primary {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.ig-button-primary:hover {
+  background: var(--primary-strong);
+}
+
+.ig-save-on {
+  color: var(--danger);
+}
+
+/* Highlights: circles that open like stories. */
+.highlights {
+  display: flex;
+  gap: 1.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 0 1.75rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.highlight {
+  display: grid;
+  justify-items: center;
+  gap: 0.45rem;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.highlight-ring {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--primary);
+  box-shadow: inset 0 0 0 3px var(--paper);
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.highlight:hover .highlight-ring,
+.highlight:focus-visible .highlight-ring {
+  transform: scale(1.04);
+  border-color: var(--accent);
+}
+
+/* Tabs */
+.ig-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 3.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.ig-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: -1px;
+  padding: 0.95rem 0;
+  border: none;
+  border-top: 1px solid transparent;
+  background: none;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.ig-tab.is-active {
+  border-top-color: var(--ink);
+  color: var(--ink);
+}
+
+.ig-panel {
+  display: grid;
+  gap: 0.9rem;
+  padding: 0.5rem 0 1rem;
+}
+
+.ig-panel .ip-section-title {
+  margin: 0.75rem 0 0;
+}
+
+.ig-empty {
+  padding: 3rem 0;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* The grid: three square tiles across, at every width. */
+.post-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.post-tile {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: none;
+  background: var(--surface-2);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.post-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.post-tile-caption {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: 0.75rem;
+  background: linear-gradient(to top, rgba(var(--ink-rgb), 0.72), transparent 60%);
+  color: var(--on-primary);
+  font-size: 0.85rem;
+  line-height: 1.35;
+  text-align: left;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.post-tile:hover .post-tile-caption,
+.post-tile:focus-visible .post-tile-caption {
+  opacity: 1;
+}
+
+/* Full-screen viewers: one post, or one highlight as a story. */
+.viewer {
+  position: fixed;
+  inset: 0;
+  /* Above the sticky top bar (200). */
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(var(--ink-rgb), 0.88);
+}
+
+.viewer-close,
+.viewer-step {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--on-primary);
+  cursor: pointer;
+}
+
+.viewer-close:hover,
+.viewer-step:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.viewer-close {
+  top: 1rem;
+  right: 1rem;
+}
+
+.viewer-step {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.viewer-step-previous {
+  left: 1rem;
+}
+
+.viewer-step-next {
+  right: 1rem;
+}
+
+.viewer-post {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  width: min(100%, 1000px);
+  max-height: calc(100vh - 3rem);
+  background: var(--surface);
+  border-radius: 6px;
+  overflow: hidden;
+  outline: none;
+}
+
+.viewer-post-img {
+  width: 100%;
+  height: 100%;
+  max-height: calc(100vh - 3rem);
+  object-fit: contain;
+  background: var(--ink);
+}
+
+.viewer-post-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem;
+  border-left: 1px solid var(--line);
+}
+
+.viewer-post-author {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+  font-weight: 700;
+}
+
+.viewer-post-author img,
+.viewer-post-author span {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 0.75rem;
+}
+
+.viewer-post-caption {
+  margin: 0;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.viewer-post-date {
+  margin: auto 0 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.story {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 400px);
+  aspect-ratio: 9 / 16;
+  max-height: calc(100vh - 3rem);
+  padding: 0.9rem 1.25rem 1.5rem;
+  border-radius: 14px;
+  background: var(--gradient-route);
+  color: var(--on-primary);
+  overflow: hidden;
+  outline: none;
+}
+
+.story-progress {
+  display: flex;
+  gap: 4px;
+}
+
+.story-progress span {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.story-progress span.is-seen {
+  background: var(--on-primary);
+}
+
+.story-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 0 1.5rem;
+  font-size: 0.85rem;
+}
+
+.story-author {
+  font-weight: 700;
+}
+
+.story-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--accent);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.story-body {
+  display: grid;
+  align-content: center;
+  gap: 1.5rem;
+  flex: 1;
+}
+
+.story-section h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.story-section ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.9rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.story-note {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* The two halves of the card: tap to step back or on. */
+.story-tap {
+  position: absolute;
+  top: 3.5rem;
+  bottom: 0;
+  width: 50%;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.story-tap:disabled {
+  cursor: default;
+}
+
+.story-tap-previous {
+  left: 0;
+}
+
+.story-tap-next {
+  right: 0;
+}
+
+.story-tap:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -4px;
+}
+
+@media (max-width: 720px) {
+  .ig-header {
+    grid-template-columns: 96px 1fr;
+    gap: 1rem 1.25rem;
+    padding-top: 0.25rem;
+  }
+
+  .ig-avatar {
+    width: 92px;
+    height: 92px;
+    padding: 3px;
+  }
+
+  .ig-avatar img,
+  .ig-avatar-initials {
+    border-width: 3px;
+    font-size: 1.8rem;
+  }
+
+  .ig-identity {
+    display: contents;
+  }
+
+  .ig-name-row {
+    align-self: center;
+  }
+
+  .ig-name {
+    font-size: 1.25rem;
+  }
+
+  .ig-stats,
+  .ig-bio,
+  .ig-actions {
+    grid-column: 1 / -1;
+  }
+
+  .ig-stats {
+    justify-content: space-around;
+    padding: 0.75rem 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    font-size: 0.85rem;
+    text-align: center;
+  }
+
+  .ig-actions .ig-button {
+    flex: 1 1 auto;
+  }
+
+  .highlights {
+    gap: 1rem;
+  }
+
+  .highlight-ring {
+    width: 62px;
+    height: 62px;
+  }
+
+  .ig-tabs {
+    gap: 0;
+    justify-content: space-around;
+  }
+
+  .post-grid {
+    gap: 2px;
+  }
+
+  .viewer {
+    padding: 0;
+  }
+
+  .viewer-post {
+    grid-template-columns: 1fr;
+    max-height: 100vh;
+    overflow-y: auto;
+    border-radius: 0;
+  }
+
+  .viewer-post-img {
+    max-height: 70vh;
+  }
+
+  .viewer-post-side {
+    border-left: none;
+  }
+
+  .viewer-step {
+    display: none;
+  }
+
+  .story {
+    width: 100%;
+    max-height: 100vh;
+    height: 100vh;
+    aspect-ratio: auto;
+    border-radius: 0;
+  }
 }
