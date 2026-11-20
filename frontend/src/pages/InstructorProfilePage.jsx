@@ -5,6 +5,7 @@ import { useAuth } from "../context/auth";
 import { StarDisplay, StarPicker } from "../components/StarRating";
 import ReviewCard from "../components/ReviewCard";
 import ReportDialog from "../components/ReportDialog";
+import { formatShortDate } from "../utils/formatDate";
 import { formatIrishPhone } from "../utils/formatPhone";
 import { responseExplanation, responseFigure } from "../utils/responseTime";
 
@@ -212,7 +213,7 @@ function InstructorProfilePage() {
     .map((word) => word[0]?.toUpperCase())
     .join("");
 
-  const gallery = instructor.gallery ?? [];
+  const posts = instructor.posts ?? [];
 
   return (
     <div className="ip-page">
@@ -401,20 +402,20 @@ function InstructorProfilePage() {
         </section>
       )}
 
-      {/* 6 — gallery. Hidden entirely when empty rather than showing a hole. */}
-      {gallery.length > 0 && (
+      {/* 6 — posts, newest first. Hidden entirely when empty rather than showing a hole. */}
+      {posts.length > 0 && (
         <section className="ip-section">
-          <h2 className="ip-section-title">Photos</h2>
+          <h2 className="ip-section-title">Posts</h2>
           <ul className="ip-gallery">
-            {gallery.map((url, index) => (
-              <li key={url}>
+            {posts.map((post, index) => (
+              <li key={post.id}>
                 <button
                   type="button"
                   className="ip-gallery-item"
-                  onClick={() => setLightbox(url)}
-                  aria-label={`Open photo ${index + 1}`}
+                  onClick={() => setLightbox(post)}
+                  aria-label={post.caption ? `Open post: ${post.caption}` : `Open post ${index + 1}`}
                 >
-                  <img src={url} alt="" loading="lazy" />
+                  <img src={post.url} alt="" loading="lazy" />
                 </button>
               </li>
             ))}
@@ -509,7 +510,15 @@ function InstructorProfilePage() {
 
       {lightbox && (
         <div className="ip-lightbox" onClick={() => setLightbox(null)} role="presentation">
-          <img src={lightbox} alt="" className="ip-lightbox-img" />
+          <figure className="ip-lightbox-figure">
+            <img src={lightbox.url} alt={lightbox.caption} className="ip-lightbox-img" />
+            {(lightbox.caption || lightbox.postedAt) && (
+              <figcaption className="ip-lightbox-caption">
+                {lightbox.caption}
+                {lightbox.postedAt && <span className="ip-lightbox-date">{formatShortDate(lightbox.postedAt)}</span>}
+              </figcaption>
+            )}
+          </figure>
         </div>
       )}
     </div>

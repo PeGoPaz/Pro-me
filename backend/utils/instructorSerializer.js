@@ -6,6 +6,7 @@
  */
 
 import { isLessonsDoneCorroborated } from "./instructorRules.js";
+import { newestFirst } from "./posts.js";
 import { publicAvatarUrl } from "./avatar.js";
 
 /* What anyone browsing the site may see.
@@ -28,7 +29,12 @@ export const toPublicProfile = (
     bio: profile.bio || "",
     /* Falls back to the account avatar — as a link, never the raw data URL. */
     profilePhotoUrl: profile.profilePhotoUrl || publicAvatarUrl(user),
-    gallery: profile.gallery ?? [],
+    posts: newestFirst(profile.posts).map((post) => ({
+      id: post._id,
+      url: post.url,
+      caption: post.caption ?? "",
+      postedAt: post.postedAt ?? null,
+    })),
 
     counties: profile.counties ?? [],
     testCentres: profile.testCentres ?? [],

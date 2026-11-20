@@ -16,19 +16,27 @@ export async function uploadAvatar(file) {
   return res.data.user;
 }
 
-/* The same cap the server enforces. */
-export const GALLERY_LIMIT = 12;
+/* The same caps the server enforces. */
+export const POST_LIMIT = 24;
+export const CAPTION_MAX = 500;
 
-/* Resizes and adds one photo to the signed-in instructor's gallery; resolves
-   to the gallery as the server now has it. */
-export async function uploadGalleryPhoto(file) {
+/* Resizes a photo and posts it, with its caption, for the signed-in
+   instructor; resolves to the new post: { id, url, caption, postedAt }. */
+export async function createPost(file, caption = "") {
   const blob = await resizePhoto(file, GALLERY_SIDE);
-  const res = await api.post("/instructors/me/gallery", photoForm(blob));
-  return res.data.gallery;
+  const form = photoForm(blob);
+  form.append("caption", caption);
+  const res = await api.post("/instructors/me/posts", form);
+  return res.data.post;
 }
 
-/* Removes one photo (and its file on Cloudinary); resolves to the new gallery. */
-export async function removeGalleryPhoto(url) {
-  const res = await api.delete("/instructors/me/gallery", { params: { url } });
-  return res.data.gallery;
+/* Changes a post's caption; resolves to the post as saved. */
+export async function editPostCaption(postId, caption) {
+  const res = await api.patch(`/instructors/me/posts/${postId}`, { caption });
+  return res.data.post;
+}
+
+/* Removes a post and its file on Cloudinary. */
+export async function deletePost(postId) {
+  await api.delete(`/instructors/me/posts/${postId}`);
 }

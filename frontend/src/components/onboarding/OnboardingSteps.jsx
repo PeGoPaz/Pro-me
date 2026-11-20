@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { Link } from "react-router-dom";
 import ChipGroup from "./ChipGroup";
-import { GALLERY_LIMIT } from "../../api/photos.js";
+import { CAPTION_MAX, POST_LIMIT } from "../../api/photos.js";
 import DashboardAvatar from "../DashboardAvatar";
 import { formatIrishPhone } from "../../utils/formatPhone";
 
@@ -262,65 +262,58 @@ export function StepAbout({ draft, setField }) {
   );
 }
 
-/* ── 5. Photos ────────────────────────────────────────────────────────────
-   Optional. Every change is saved the moment it is made. Reordering uses
-   buttons rather than dragging, which works from a keyboard and on a phone. */
+/* ── 5. Posts ─────────────────────────────────────────────────────────────
+   Optional. Photos are posted the moment they are chosen, newest first like
+   any feed; a caption is saved when its field is left. */
 export function StepMedia({ draft, media }) {
   const input = useRef(null);
-  const count = draft.gallery.length;
-  const full = count >= GALLERY_LIMIT;
+  const count = draft.posts.length;
+  const full = count >= POST_LIMIT;
 
   return (
     <>
       <p className="ob-help">
-        The car learners will drive, where lessons usually start, you teaching.
-        Profiles with photos look like someone real is behind them. JPEG, PNG or
-        WebP; location data is removed from every photo. The first photo leads
-        your gallery, and the starred one replaces your avatar on your profile.
+        Post the car learners will drive, where lessons usually start, a pass
+        worth celebrating. Profiles with posts look like someone real is behind
+        them. JPEG, PNG or WebP; location data is removed from every photo. The
+        starred photo replaces your avatar on your profile.
       </p>
 
       {count > 0 && (
         <ul className="ob-gallery">
-          {draft.gallery.map((url, index) => (
-            <li key={url} className="ob-gallery-item">
-              <img src={url} alt={`Photo ${index + 1}`} loading="lazy" />
+          {draft.posts.map((post, index) => (
+            <li key={post.id} className="ob-gallery-item">
+              <img src={post.url} alt={post.caption || `Post ${index + 1}`} loading="lazy" />
               <button
                 type="button"
                 className="ob-gallery-remove"
-                onClick={() => media.onRemove(url)}
+                onClick={() => media.onRemove(post)}
                 disabled={Boolean(media.busy)}
-                aria-label={`Remove photo ${index + 1}`}
+                aria-label={`Remove post ${index + 1}`}
               >
                 ×
               </button>
               <div className="ob-gallery-tools">
                 <button
                   type="button"
-                  onClick={() => media.onMove(index, -1)}
-                  disabled={index === 0 || Boolean(media.busy)}
-                  aria-label={`Move photo ${index + 1} earlier`}
-                >
-                  ←
-                </button>
-                <button
-                  type="button"
-                  className={draft.profilePhotoUrl === url ? "is-on" : ""}
-                  onClick={() => media.onChooseProfile(url)}
+                  className={draft.profilePhotoUrl === post.url ? "is-on" : ""}
+                  onClick={() => media.onChooseProfile(post.url)}
                   disabled={Boolean(media.busy)}
-                  aria-pressed={draft.profilePhotoUrl === url}
-                  aria-label={`Use photo ${index + 1} as your profile photo`}
+                  aria-pressed={draft.profilePhotoUrl === post.url}
+                  aria-label={`Use the photo of post ${index + 1} as your profile photo`}
                 >
                   ★
                 </button>
-                <button
-                  type="button"
-                  onClick={() => media.onMove(index, 1)}
-                  disabled={index === count - 1 || Boolean(media.busy)}
-                  aria-label={`Move photo ${index + 1} later`}
-                >
-                  →
-                </button>
               </div>
+              <textarea
+                className="ob-post-caption"
+                defaultValue={post.caption}
+                maxLength={CAPTION_MAX}
+                rows={2}
+                placeholder="Write a caption…"
+                aria-label={`Caption of post ${index + 1}`}
+                onBlur={(e) => media.onCaption(post, e.target.value)}
+              />
             </li>
           ))}
         </ul>
@@ -345,10 +338,10 @@ export function StepMedia({ draft, media }) {
           onClick={() => input.current?.click()}
           disabled={full || Boolean(media.busy)}
         >
-          {full ? "Gallery full" : "Add photos"}
+          {full ? "No room for more posts" : "Post photos"}
         </button>
         <span className="ob-help" role="status">
-          {media.busy || `${count} of ${GALLERY_LIMIT} photos`}
+          {media.busy || `${count} of ${POST_LIMIT} posts`}
         </span>
       </div>
 
@@ -376,7 +369,7 @@ export function StepReview({ draft, setField, reference, user, onEdit, blockers,
     { step: "about", label: "Headline", value: draft.headline || "—" },
     { step: "about", label: "Price", value: draft.pricePerLesson !== "" ? `€${draft.pricePerLesson}` : "—" },
     { step: "about", label: "Lessons taught", value: draft.lessonsDone ? `${draft.lessonsDone} (self-reported)` : "—" },
-    { step: "media", label: "Photos", value: draft.gallery.length ? `${draft.gallery.length} of ${GALLERY_LIMIT}` : "None yet (optional)" },
+    { step: "media", label: "Posts", value: draft.posts.length ? `${draft.posts.length} of ${POST_LIMIT}` : "None yet (optional)" },
   ];
 
   return (

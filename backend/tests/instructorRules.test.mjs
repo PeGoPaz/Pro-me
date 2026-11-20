@@ -132,7 +132,7 @@ test("a fully filled profile scores 100", () => {
       transmission: ["automatic"],
       bio: "I teach nervous beginners.",
       pricePerLesson: 45,
-      gallery: ["https://example.com/b.jpg"],
+      posts: [{ url: "https://example.com/b.jpg", caption: "", postedAt: new Date() }],
     }),
     100
   );

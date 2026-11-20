@@ -4,8 +4,8 @@ import { Link } from "react-router-dom";
  * Privacy policy.
  *
  * Written around the data this platform actually holds and the parts that are
- * genuinely awkward: reviews contain two people's personal data, gallery photos
- * may show learners including minors, and instructors publish a phone number.
+ * genuinely awkward: reviews contain two people's personal data, the photos in
+ * posts may show learners including minors, and instructors publish a phone number.
  * The Data Protection Commission is the supervisory authority.
  *
  * Company-specific values are [PLACEHOLDER]s — nothing is invented.
@@ -68,7 +68,7 @@ function PrivacyPage() {
               <td>Contract</td>
             </tr>
             <tr>
-              <td>Profile and gallery photos</td>
+              <td>Profile photo, and the photos and captions of posts</td>
               <td>To show learners who you are</td>
               <td>Consent</td>
             </tr>

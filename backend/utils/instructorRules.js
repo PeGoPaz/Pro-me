@@ -90,7 +90,7 @@ export const COMPLETENESS_WEIGHTS = {
   transmission: 10,
   bio: 10,
   pricePerLesson: 10,
-  gallery: 5,
+  posts: 5,
 };
 
 const hasValue = (value) => {
