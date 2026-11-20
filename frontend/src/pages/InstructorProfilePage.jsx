@@ -1,24 +1,30 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import api from "../api/index.js";
 import { useAuth } from "../context/auth";
 import { StarDisplay, StarPicker } from "../components/StarRating";
 import ReviewCard from "../components/ReviewCard";
 import ReportDialog from "../components/ReportDialog";
-import { formatShortDate } from "../utils/formatDate";
+import Highlights from "../components/profile/Highlights";
+import PostGrid from "../components/profile/PostGrid";
+import PostViewer from "../components/profile/PostViewer";
+import ProfileIcon from "../components/profile/ProfileIcon";
+import { formatMonthYear } from "../utils/formatDate";
 import { formatIrishPhone } from "../utils/formatPhone";
-import { responseExplanation, responseFigure } from "../utils/responseTime";
+import { profileHighlights } from "../utils/profileHighlights";
 
 /*
- * The public instructor profile.
+ * The public instructor profile, laid out the way people already know how to
+ * read a person's page: a photo ringed in amber while they take new learners,
+ * three numbers, a short bio and the actions; then highlights that open like
+ * stories (where they teach, what, for how much); then tabs - posts as a
+ * square grid, reviews, and everything else under About. The point is that an
+ * individual instructor should feel like a person, not a directory row.
  *
- * Block order follows the roadmap's content hierarchy exactly:
- *   photo and name → verification badge, rating, lessons → county and test
- *   centre coverage → category badges → bio → gallery → reviews → save action.
- *
- * Visually it leans Instagram-ish, as the roadmap asks: one large photo, a
- * simple stat row, a photo grid. The point is that an individual instructor
- * should feel like a person, not a directory row.
+ * The trust signals stay where the roadmap put them, at the top: the verified
+ * badge next to the name, the rating and the lesson count (labelled when it is
+ * self-reported) in the numbers, and a plain note when the ADI number has not
+ * been checked yet.
  *
  * It reads GET /api/instructors/:id (the public slice, with the ADI number
  * and subscription stripped out) and GET /api/reviews/provider/:id; a learner
@@ -36,7 +42,8 @@ function InstructorProfilePage() {
   const [status, setStatus] = useState("loading");
   const [isSaved, setIsSaved] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
-  const [lightbox, setLightbox] = useState(null);
+  const [openPost, setOpenPost] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [reviewForm, setReviewForm] = useState({ rating: 0, comment: "" });
   const [reviewError, setReviewError] = useState("");
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
@@ -214,279 +221,262 @@ function InstructorProfilePage() {
     .join("");
 
   const posts = instructor.posts ?? [];
+  const author = { name: instructor.name, initials: initials || "DI", photo: instructor.profilePhotoUrl };
+  const highlights = profileHighlights(instructor, {
+    counties: countyLabels,
+    centres: centreLabels,
+    categories: categoryLabels,
+  });
+  const isOwnProfile = String(user?._id ?? user?.id) === instructorUserId;
+
+  /* The tab lives in the address, so a link can open the reviews directly. */
+  const TABS = [
+    { id: "posts", label: "Posts", icon: "grid" },
+    { id: "reviews", label: "Reviews", icon: "star" },
+    { id: "about", label: "About", icon: "info" },
+  ];
+  const tab = TABS.some((t) => t.id === searchParams.get("tab")) ? searchParams.get("tab") : "posts";
+  const chooseTab = (id) => setSearchParams(id === "posts" ? {} : { tab: id }, { replace: true });
 
   return (
-    <div className="ip-page">
-      {/* 1 + 2 — photo, name, then the trust signals, highest on the page */}
-      <header className="ip-header">
-        <div className="ip-avatar">
+    <div className="ig-page">
+      <header className="ig-header">
+        {/* Amber ring while they take new learners, like a story waiting to be seen. */}
+        <div className={`ig-avatar ${instructor.acceptingNewStudents ? "ig-avatar-open" : ""}`}>
           {instructor.profilePhotoUrl ? (
-            <img src={instructor.profilePhotoUrl} alt={instructor.name} className="ip-avatar-img" />
+            <img src={instructor.profilePhotoUrl} alt={instructor.name} />
           ) : (
-            <span className="ip-avatar-initials">{initials || "DI"}</span>
+            <span className="ig-avatar-initials" aria-hidden="true">{initials || "DI"}</span>
           )}
         </div>
 
-        <div className="ip-identity">
-          <h1 className="ip-name">
-            {instructor.name}
+        <div className="ig-identity">
+          <div className="ig-name-row">
+            <h1 className="ig-name">{instructor.name}</h1>
             {instructor.isVerified && (
-              <span className="ip-verified" title="ADI number checked against the RSA register">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M12 2l7 3v6c0 4.5-3 8.6-7 11-4-2.4-7-6.5-7-11V5l7-3z"
-                    stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2"
-                    strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+              <span className="ig-verified" title="ADI number checked against the RSA register">
+                <ProfileIcon name="shield" size={15} />
                 Verified ADI
               </span>
             )}
-          </h1>
-
-          {instructor.headline && <p className="ip-headline">{instructor.headline}</p>}
-
-          {/* The simple stat row the roadmap asks for */}
-          <div className="ip-stats">
-            <div className="ip-stat">
-              {instructor.averageRating !== null ? (
-                <>
-                  <span className="ip-stat-value">{instructor.averageRating.toFixed(1)}</span>
-                  <span className="ip-stat-label">
-                    {instructor.reviewCount} {instructor.reviewCount === 1 ? "review" : "reviews"}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span className="ip-stat-value ip-stat-value-muted">—</span>
-                  <span className="ip-stat-label">No reviews yet</span>
-                </>
-              )}
-            </div>
-
-            {/* "0 lessons" says nothing useful and reads badly; omit it. */}
-            {instructor.lessonsDone > 0 && <div className="ip-stat">
-              <span className="ip-stat-value">{instructor.lessonsDone}</span>
-              {/* Never let this read as a verified figure. */}
-              <span className="ip-stat-label">
-                lessons{instructor.lessonsDoneIsSelfReported && " (self-reported)"}
-              </span>
-            </div>}
-
-            {/* Left out until there are enough requests to go on. */}
-            {instructor.responseTime && (
-              <div className="ip-stat" title={responseExplanation(instructor.responseTime)}>
-                <span className="ip-stat-value">{responseFigure(instructor.responseTime)}</span>
-                <span className="ip-stat-label">typical reply</span>
-              </div>
-            )}
-
-            <div className="ip-stat">
-              <span className={`ip-stat-value ${instructor.acceptingNewStudents ? "ip-stat-open" : "ip-stat-closed"}`}>
-                {instructor.acceptingNewStudents ? "Open" : "Closed"}
-              </span>
-              <span className="ip-stat-label">
-                {instructor.acceptingNewStudents ? "taking students" : "not taking students"}
-              </span>
-            </div>
           </div>
 
-          {!instructor.isVerified && (
-            /* Unverified profiles are listed but must say so plainly — the
-               whole trust proposition depends on the distinction being visible. */
-            <p className="ip-unverified-note">
-              This instructor's ADI number has not been checked against the RSA
-              register yet.
+          <ul className="ig-stats">
+            <li>
+              <strong>{posts.length}</strong> {posts.length === 1 ? "post" : "posts"}
+            </li>
+            <li>
+              {instructor.averageRating !== null ? (
+                <>
+                  <strong>{instructor.averageRating.toFixed(1)}</strong>{" "}
+                  <button type="button" className="ig-stat-link" onClick={() => chooseTab("reviews")}>
+                    {instructor.reviewCount} {instructor.reviewCount === 1 ? "review" : "reviews"}
+                  </button>
+                </>
+              ) : (
+                "No reviews yet"
+              )}
+            </li>
+            {/* "0 lessons" says nothing useful and reads badly; omit it. */}
+            {instructor.lessonsDone > 0 && (
+              <li>
+                <strong>{instructor.lessonsDone.toLocaleString("en-IE")}</strong> lessons
+                {/* Never let this read as a verified figure. */}
+                {instructor.lessonsDoneIsSelfReported && <span className="ig-self-reported"> (self-reported)</span>}
+              </li>
+            )}
+          </ul>
+
+          <div className="ig-bio">
+            {instructor.headline && <p className="ig-headline">{instructor.headline}</p>}
+            {instructor.bio && <p className="ig-bio-text">{instructor.bio}</p>}
+            <p className="ig-facts">
+              {instructor.pricePerLesson !== null && instructor.pricePerLesson !== undefined && (
+                <span><strong>€{instructor.pricePerLesson}</strong> a lesson</span>
+              )}
+              <span className={instructor.acceptingNewStudents ? "ig-open" : "ig-closed"}>
+                {instructor.acceptingNewStudents ? "Taking new learners" : "Not taking new learners"}
+              </span>
             </p>
-          )}
-        </div>
+            {!instructor.isVerified && (
+              /* Unverified profiles are listed but must say so plainly — the
+                 whole trust proposition depends on the distinction being visible. */
+              <p className="ip-unverified-note">
+                This instructor's ADI number has not been checked against the RSA register yet.
+              </p>
+            )}
+          </div>
 
-        {/* 8 — the actions */}
-        <div className="ip-actions">
-          {/* Only offered when they are actually taking students; a request
-              that will certainly be declined helps nobody. */}
-          {canActAsLearner && instructor.acceptingNewStudents && (
-            <Link to={`/booking?instructor=${instructorUserId}`} className="ip-book">
-              Request a lesson
-            </Link>
-          )}
+          <div className="ig-actions">
+            {/* Only offered when they are actually taking students; a request
+                that will certainly be declined helps nobody. */}
+            {canActAsLearner && instructor.acceptingNewStudents && (
+              <Link to={`/booking?instructor=${instructorUserId}`} className="ig-button ig-button-primary">
+                Request a lesson
+              </Link>
+            )}
 
-          {canActAsLearner && <button
-            type="button"
-            className={`ip-save ${isSaved ? "ip-save-on" : ""}`}
-            onClick={toggleSave}
-            aria-pressed={isSaved}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24"
-              fill={isSaved ? "currentColor" : "none"} aria-hidden="true">
-              <path d="M6 4h12a1 1 0 011 1v15l-7-4-7 4V5a1 1 0 011-1z"
-                stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-            </svg>
-            {isSaved ? "Saved" : "Save"}
-          </button>}
+            {canActAsLearner && (
+              <button
+                type="button"
+                className={`ig-button ig-save ${isSaved ? "ig-save-on" : ""}`}
+                onClick={toggleSave}
+                aria-pressed={isSaved}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill={isSaved ? "currentColor" : "none"} aria-hidden="true">
+                  <path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"
+                    stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                </svg>
+                {isSaved ? "Saved" : "Save"}
+              </button>
+            )}
 
-          {/* The API only returns the number to signed-in visitors. */}
-          {instructor.phone ? (
-            <a href={`tel:${instructor.phone}`} className="ip-contact">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2"
-                  stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-              </svg>
-              {formatIrishPhone(instructor.phone)}
-            </a>
-          ) : !user ? (
-            <p className="ip-contact-locked">
-              <Link to="/login" className="legal-link">Sign in</Link> to see their phone number
-            </p>
-          ) : null}
+            {/* The API only returns the number to signed-in visitors. */}
+            {instructor.phone ? (
+              <a href={`tel:${instructor.phone}`} className="ig-button">
+                {formatIrishPhone(instructor.phone)}
+              </a>
+            ) : !user ? (
+              <Link to="/login" className="ig-button">Sign in for their number</Link>
+            ) : null}
 
-          {/* The instructor looking at their own public page. */}
-          {String(user?._id ?? user?.id) === instructorUserId && (
-            <Link to="/onboarding" className="button button-ghost">Edit my profile</Link>
-          )}
-
-          {instructor.pricePerLesson !== null && instructor.pricePerLesson !== undefined && (
-            <p className="ip-price">
-              €{instructor.pricePerLesson}
-              <span className="ip-price-unit"> / lesson</span>
-            </p>
-          )}
+            {isOwnProfile && (
+              <Link to="/onboarding" className="ig-button">Edit profile</Link>
+            )}
+          </div>
         </div>
       </header>
 
-      {/* 3 — coverage */}
-      <section className="ip-section">
-        <h2 className="ip-section-title">Where they teach</h2>
-        <div className="ip-chips">
-          {(instructor.counties ?? []).map((slug) => (
-            <span key={slug} className="inst-chip inst-chip-county">
-              {countyLabels[slug] ?? slug}
-            </span>
-          ))}
-        </div>
-        {(instructor.testCentres ?? []).length > 0 && (
-          <>
-            <p className="ip-subtle">Test centres served</p>
-            <div className="ip-chips">
-              {instructor.testCentres.map((slug) => (
-                <span key={slug} className="inst-chip inst-chip-centre">
-                  {centreLabels[slug] ?? slug}
-                </span>
-              ))}
-            </div>
-          </>
-        )}
-      </section>
+      <Highlights highlights={highlights} author={author} />
 
-      {/* 4 — category badges: letter plus transmission, kept on separate axes */}
-      <section className="ip-section">
-        <h2 className="ip-section-title">What they teach</h2>
-        <div className="ip-chips">
-          {(instructor.licenceCategories ?? []).map((code) => (
-            <span key={code} className="inst-chip inst-chip-cat">
-              {categoryLabels[code] ? `${categoryLabels[code]} (${code})` : code}
-            </span>
-          ))}
-          {(instructor.transmission ?? []).map((value) => (
-            <span key={value} className="inst-chip inst-chip-trans">
-              {value === "automatic" ? "Automatic" : "Manual"}
-            </span>
-          ))}
-        </div>
-      </section>
+      <div className="ig-tabs" role="tablist" aria-label="Profile">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            id={`ig-tab-${t.id}`}
+            aria-selected={tab === t.id}
+            aria-controls={`ig-panel-${t.id}`}
+            className={`ig-tab ${tab === t.id ? "is-active" : ""}`}
+            onClick={() => chooseTab(t.id)}
+          >
+            <ProfileIcon name={t.icon} size={14} />
+            {t.label}
+          </button>
+        ))}
+      </div>
 
-      {/* 5 — bio */}
-      {instructor.bio && (
-        <section className="ip-section">
-          <h2 className="ip-section-title">About</h2>
-          <p className="ip-bio">{instructor.bio}</p>
+      {tab === "posts" && (
+        <section id="ig-panel-posts" role="tabpanel" aria-labelledby="ig-tab-posts">
+          <PostGrid posts={posts} onOpen={setOpenPost} />
         </section>
       )}
 
-      {/* 6 — posts, newest first. Hidden entirely when empty rather than showing a hole. */}
-      {posts.length > 0 && (
-        <section className="ip-section">
-          <h2 className="ip-section-title">Posts</h2>
-          <ul className="ip-gallery">
-            {posts.map((post, index) => (
-              <li key={post.id}>
-                <button
-                  type="button"
-                  className="ip-gallery-item"
-                  onClick={() => setLightbox(post)}
-                  aria-label={post.caption ? `Open post: ${post.caption}` : `Open post ${index + 1}`}
-                >
-                  <img src={post.url} alt="" loading="lazy" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {/* 7 — reviews */}
-      <section className="ip-section">
-        <h2 className="ip-section-title">
-          Reviews
+      {tab === "reviews" && (
+        <section id="ig-panel-reviews" role="tabpanel" aria-labelledby="ig-tab-reviews" className="ig-panel">
           {instructor.reviewCount > 0 && (
-            <span className="ip-review-summary">
+            <p className="ip-review-summary">
               <StarDisplay rating={instructor.averageRating} size={14} />
-              {instructor.averageRating.toFixed(1)} · {instructor.reviewCount}
-            </span>
+              {instructor.averageRating.toFixed(1)} · {instructor.reviewCount}{" "}
+              {instructor.reviewCount === 1 ? "review" : "reviews"}
+            </p>
           )}
-        </h2>
 
-        {canReview && !reviewDone && (
-          <form className="ip-review-form" onSubmit={submitReview} noValidate>
-            {reviewError && <div className="report-error" role="alert">{reviewError}</div>}
+          {canReview && !reviewDone && (
+            <form className="ip-review-form" onSubmit={submitReview} noValidate>
+              {reviewError && <div className="report-error" role="alert">{reviewError}</div>}
 
-            <StarPicker
-              value={reviewForm.rating}
-              onChange={(rating) => setReviewForm((prev) => ({ ...prev, rating }))}
-            />
+              <StarPicker
+                value={reviewForm.rating}
+                onChange={(rating) => setReviewForm((prev) => ({ ...prev, rating }))}
+              />
 
-            <textarea
-              rows={3}
-              maxLength={1000}
-              className="ip-review-comment"
-              placeholder="How were your lessons? (optional)"
-              value={reviewForm.comment}
-              onChange={(e) => setReviewForm((prev) => ({ ...prev, comment: e.target.value }))}
-            />
+              <textarea
+                rows={3}
+                maxLength={1000}
+                className="ip-review-comment"
+                placeholder="How were your lessons? (optional)"
+                value={reviewForm.comment}
+                onChange={(e) => setReviewForm((prev) => ({ ...prev, comment: e.target.value }))}
+              />
 
-            <button type="submit" className="button button-primary" disabled={reviewSubmitting}>
-              {reviewSubmitting ? "Posting…" : "Post review"}
-            </button>
-          </form>
-        )}
+              <button type="submit" className="button button-primary" disabled={reviewSubmitting}>
+                {reviewSubmitting ? "Posting…" : "Post review"}
+              </button>
+            </form>
+          )}
 
-        {reviewDone && (
-          <p className="ip-subtle">Thanks — your review has been posted.</p>
-        )}
+          {reviewDone && (
+            <p className="ip-subtle">Thanks — your review has been posted.</p>
+          )}
 
-        {mayAskToReview && eligibility === "no_lesson" && (
-          <p className="ip-subtle">
-            You can review {instructor.name?.split(" ")[0] || "this instructor"} once you have had a lesson with them.
-          </p>
-        )}
+          {mayAskToReview && eligibility === "no_lesson" && (
+            <p className="ip-subtle">
+              You can review {instructor.name?.split(" ")[0] || "this instructor"} once you have had a lesson with them.
+            </p>
+          )}
 
-        {!user && (
-          <p className="ip-subtle">
-            <Link to="/login" className="legal-link">Sign in</Link> to leave a review.
-          </p>
-        )}
+          {!user && (
+            <p className="ip-subtle">
+              <Link to="/login" className="legal-link">Sign in</Link> to leave a review.
+            </p>
+          )}
 
-        {reviews.length === 0 ? (
-          <p className="ip-subtle">No reviews yet.</p>
-        ) : (
-          <ul className="ip-reviews">
-            {reviews.map((review) => (
-              <li key={review._id}>
-                <ReviewCard review={review} />
-              </li>
+          {reviews.length === 0 ? (
+            <p className="ig-empty">No reviews yet.</p>
+          ) : (
+            /* ReviewCard is the <li> itself, as on the dashboard. */
+            <ul className="ip-reviews">
+              {reviews.map((review) => <ReviewCard key={review._id} review={review} />)}
+            </ul>
+          )}
+        </section>
+      )}
+
+      {tab === "about" && (
+        <section id="ig-panel-about" role="tabpanel" aria-labelledby="ig-tab-about" className="ig-panel">
+          <h2 className="ip-section-title">Where they teach</h2>
+          <div className="ip-chips">
+            {(instructor.counties ?? []).map((slug) => (
+              <span key={slug} className="inst-chip inst-chip-county">
+                {countyLabels[slug] ?? slug}
+              </span>
             ))}
-          </ul>
-        )}
-      </section>
+          </div>
+          {(instructor.testCentres ?? []).length > 0 && (
+            <>
+              <p className="ip-subtle">Test centres served</p>
+              <div className="ip-chips">
+                {instructor.testCentres.map((slug) => (
+                  <span key={slug} className="inst-chip inst-chip-centre">
+                    {centreLabels[slug] ?? slug}
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Category badges: letter plus transmission, kept on separate axes. */}
+          <h2 className="ip-section-title">What they teach</h2>
+          <div className="ip-chips">
+            {(instructor.licenceCategories ?? []).map((code) => (
+              <span key={code} className="inst-chip inst-chip-cat">
+                {categoryLabels[code] ? `${categoryLabels[code]} (${code})` : code}
+              </span>
+            ))}
+            {(instructor.transmission ?? []).map((value) => (
+              <span key={value} className="inst-chip inst-chip-trans">
+                {value === "automatic" ? "Automatic" : "Manual"}
+              </span>
+            ))}
+          </div>
+
+          {instructor.memberSince && (
+            <p className="ip-subtle">On Pro.me since {formatMonthYear(instructor.memberSince)}</p>
+          )}
+        </section>
+      )}
 
       {/* DSA Article 16 — available to everyone, signed in or not. */}
       <div className="report-trigger-row">
@@ -508,18 +498,8 @@ function InstructorProfilePage() {
         />
       )}
 
-      {lightbox && (
-        <div className="ip-lightbox" onClick={() => setLightbox(null)} role="presentation">
-          <figure className="ip-lightbox-figure">
-            <img src={lightbox.url} alt={lightbox.caption} className="ip-lightbox-img" />
-            {(lightbox.caption || lightbox.postedAt) && (
-              <figcaption className="ip-lightbox-caption">
-                {lightbox.caption}
-                {lightbox.postedAt && <span className="ip-lightbox-date">{formatShortDate(lightbox.postedAt)}</span>}
-              </figcaption>
-            )}
-          </figure>
-        </div>
+      {openPost !== null && posts[openPost] && (
+        <PostViewer posts={posts} index={openPost} author={author} onIndex={setOpenPost} onClose={() => setOpenPost(null)} />
       )}
     </div>
   );
