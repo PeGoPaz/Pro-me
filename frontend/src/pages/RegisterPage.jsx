@@ -55,10 +55,10 @@ function RegisterPage() {
     <div className="auth-page">
       <Link to="/" className="auth-brand">
         <svg className="auth-brand-icon" width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <rect x="3" y="4" width="18" height="18" rx="3" stroke="#1e4bdd" strokeWidth="2" />
-          <line x1="3" y1="9" x2="21" y2="9" stroke="#1e4bdd" strokeWidth="2" />
-          <line x1="8" y1="2" x2="8" y2="6" stroke="#1e4bdd" strokeWidth="2" strokeLinecap="round" />
-          <line x1="16" y1="2" x2="16" y2="6" stroke="#1e4bdd" strokeWidth="2" strokeLinecap="round" />
+          <rect x="3" y="4" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="2" />
+          <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" strokeWidth="2" />
+          <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
         <span className="auth-brand-name">Pro.me</span>
       </Link>

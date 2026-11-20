@@ -124,8 +124,8 @@ function BookingPage() {
         <div className="booking-success">
           <div className="booking-success-icon">
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="12" cy="12" r="10" stroke="#1a8a5a" strokeWidth="2" />
-              <path d="M7 12l4 4 6-6" stroke="#1a8a5a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+              <path d="M7 12l4 4 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
           <h2 className="booking-success-title">Booking Request Sent!</h2>
