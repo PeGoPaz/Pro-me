@@ -29,6 +29,7 @@ jobs:
       # run against; on GitHub's runners that adds a few seconds, not worth a cache.
       - run: npm ci
 
+      - run: npm run lint
       - run: npm test
 
   frontend:
