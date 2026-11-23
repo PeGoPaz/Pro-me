@@ -251,7 +251,7 @@ app.use((req, res) => {
 });
 
 // Security: Global error handler - don't leak error details in production
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
     console.error('Error:', err.message);
     
     // Don't leak error details in production
